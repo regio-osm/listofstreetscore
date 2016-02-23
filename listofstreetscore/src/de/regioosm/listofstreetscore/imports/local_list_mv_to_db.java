@@ -15,7 +15,7 @@ public class local_list_mv_to_db {
 	static Applicationconfiguration configuration = new Applicationconfiguration();
 
 
-	private static void storeMunicipalityStreets(String country, String municipality_name, String ags, String[] streets, String[] streetids, Integer streetcount) {
+	private static boolean storeMunicipalityStreets(String country, String municipality_name, String ags, String[] streets, String[] streetids, Integer streetcount) {
 		// take standard municipality name at this point as unique name - COULD BE A PROBLEM because of intransparency of this action
 		String municipality_nameunique = municipality_name;
 
@@ -41,12 +41,13 @@ public class local_list_mv_to_db {
 				}
 			} else {
 				System.out.println("ERROR: municipality could not be verified due to missing officialkeys-id ");
+				return false;
 			}
 		}
 		catch( SQLException e) {
 			System.out.println("Error occured while tried to connect to database");
 			e.printStackTrace();
-			return;
+			return false;
 		}
 		if( ! municipality_nameunique.equals(municipality_name)) {
 			System.out.println("Warning: change municipality name from file ==="+municipality_name+"=== to unique name ==="+municipality_nameunique+"===");
@@ -66,7 +67,7 @@ public class local_list_mv_to_db {
 				country_id = existingcountryRS.getLong("id");
 			} else {
 				System.out.println("ERROR, Country unknown");
-				return;
+				return false;
 			}
 			existingcountryRS.close();
 			selectqueryStmt.close();
@@ -74,7 +75,7 @@ public class local_list_mv_to_db {
 		catch( SQLException e) {
 			System.out.println("Error occured while query country");
 			e.printStackTrace();
-			return;
+			return false;
 		}
 		
 
@@ -108,7 +109,7 @@ public class local_list_mv_to_db {
 					e.printStackTrace();
 					System.out.println("FEHLERHAFTER Insert-Befehl sqlinsert_string ===" + municipalityInsertSql + "===");
 					System.out.println(" Forts. FEHLER: municipality_name ==="+municipality_name+"===");
-					return;
+					return false;
 				}
 				municipalityInsertStmt.close();
 			}
@@ -118,7 +119,7 @@ public class local_list_mv_to_db {
 		catch( SQLException e) {
 			System.out.println("Error occured while tried to get municipality");
 			e.printStackTrace();
-			return;
+			return false;
 		}
 		
 //TODO complete transaction mode		
@@ -131,13 +132,13 @@ public class local_list_mv_to_db {
 				String street = streets[streetindex];
 				String streetref = streetids[streetindex];
 	
-				insertStreetSql = "INSERT INTO street (country_id, municipality_id, name, streetref) VALUES (?, ?, ?, ?);";
+				insertStreetSql = "INSERT INTO streetoriginal (country_id, municipality_id, name, streetref) VALUES (?, ?, ?, ?);";
 				insertStreetStmt = con_listofstreets.prepareStatement(insertStreetSql);
 				insertStreetStmt.setLong(1, country_id);
 				insertStreetStmt.setLong(2, municipality_id);
 				insertStreetStmt.setString(3, street);
 				insertStreetStmt.setString(4, streetref);
-				System.out.println("insert street ===" + insertStreetSql + "===");
+				System.out.println("insert streetoriginal ===" + insertStreetSql + "===");
 	
 			
 				if((streets_imported % 100) == 0)
@@ -158,9 +159,9 @@ public class local_list_mv_to_db {
 		catch( SQLException e) {
 			System.out.println("Error occured while tried insert streets");
 			e.printStackTrace();
-			return;
+			return false;
 		}
-
+		return true;
 	}
 
 	
@@ -220,8 +221,13 @@ public class local_list_mv_to_db {
 					System.out.println("Information: changed municipality in line "+file_lineno+"  from gemeindeschluessel ==="+municipality_gemeindeschluessel+"=== to ==="+act_line_columns[0]+"===");
 		
 					if(strassenanzahl > 0) {
-						storeMunicipalityStreets(global_const_countryname, municipality_name, municipality_gemeindeschluessel, strassen, strassenid, strassenanzahl);
-						municipality_count++;
+						boolean stored = storeMunicipalityStreets(global_const_countryname, municipality_name, municipality_gemeindeschluessel, strassen, strassenid, strassenanzahl);
+						if(stored) {
+							municipality_count++;
+						} else {
+							System.out.println("ERROR ERROR: streets for municipality ===" + municipality_name + "=== could not be stored");
+						}
+							
 				 	} // end of found streets when regionalkey changed: if(strassenanzahl > 0) {
 		
 					municipality_gemeindeschluessel = "";
@@ -262,8 +268,12 @@ municipality_submunicipalityname = "";
 
 				// After reading file complete: if streets still in buffer, import them now
 			if(strassenanzahl > 0) {
-				storeMunicipalityStreets(global_const_countryname, municipality_name, municipality_gemeindeschluessel, strassen, strassenid, strassenanzahl);
-				municipality_count++;
+				boolean stored = storeMunicipalityStreets(global_const_countryname, municipality_name, municipality_gemeindeschluessel, strassen, strassenid, strassenanzahl);
+				if(stored) {
+					municipality_count++;
+				} else {
+					System.out.println("ERROR ERROR: streets for municipality ===" + municipality_name + "=== could not be stored");
+				}
 		 	} // end of found streets when regionalkey changed: if(strassenanzahl > 0) {
 
 

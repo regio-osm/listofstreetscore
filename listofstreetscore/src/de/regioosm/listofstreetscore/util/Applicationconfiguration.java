@@ -23,6 +23,8 @@ public class Applicationconfiguration {
 	public String db_osm2pgsqlfullhistoryccbysa_url = "";
 	public String db_osm2pgsqlfullhistoryccbysa_username = "";
 	public String db_osm2pgsqlfullhistoryccbysa_password = "";
+	public String streetlistwiki_importeruseraccount = "";
+	public String streetlistwiki_importeruserpassword = "";
 	public String osmosis_laststatefile = "";
 	public String logging_filename = "";
 	public Level logging_console_level = Level.FINEST;
@@ -62,8 +64,6 @@ public class Applicationconfiguration {
 				this.db_osm2pgsql_username = prop.getProperty("db_osm2pgsql_username");
 			if( prop.getProperty("db_osm2pgsql_password") != null)
 				this.db_osm2pgsql_password = prop.getProperty("db_osm2pgsql_password");
-
-
 			if( prop.getProperty("db_osm2pgsqlfullhistoryodbl_url") != null)
 				this.db_osm2pgsqlfullhistoryodbl_url = prop.getProperty("db_osm2pgsqlfullhistoryodbl_url");
 			if( prop.getProperty("db_osm2pgsqlfullhistoryodbl_username") != null)
@@ -76,6 +76,10 @@ public class Applicationconfiguration {
 				this.db_osm2pgsqlfullhistoryccbysa_username = prop.getProperty("db_osm2pgsqlfullhistoryccbysa_username");
 			if( prop.getProperty("db_osm2pgsqlfullhistoryccbysa_password") != null)
 				this.db_osm2pgsqlfullhistoryccbysa_password = prop.getProperty("db_osm2pgsqlfullhistoryccbysa_password");
+			if( prop.getProperty("streetlistwiki_importeruseraccount") != null)
+				this.streetlistwiki_importeruseraccount = prop.getProperty("streetlistwiki_importeruseraccount");
+			if( prop.getProperty("streetlistwiki_importeruserpassword") != null)
+				this.streetlistwiki_importeruserpassword = prop.getProperty("streetlistwiki_importeruserpassword");
 			if( prop.getProperty("osmosis_laststatefile") != null)
 				this.osmosis_laststatefile = prop.getProperty("osmosis_laststatefile");
 			if( prop.getProperty("logging_filename") != null)
@@ -101,6 +105,8 @@ public class Applicationconfiguration {
 			System.out.println(" .db_osm2pgsqlfullhistoryccbysa_url       ==="+this.db_osm2pgsqlfullhistoryccbysa_url+"===");
 			System.out.println(" .db_osm2pgsqlfullhistoryccbysa_username  ==="+this.db_osm2pgsqlfullhistoryccbysa_username+"===");
 			System.out.println(" .db_osm2pgsqlfullhistoryccbysa_password  ==="+this.db_osm2pgsqlfullhistoryccbysa_password+"===");
+			System.out.println(" .streetlistwiki_importeruseraccount      ==="+this.streetlistwiki_importeruseraccount+"===");
+			System.out.println(" .streetlistwiki_importeruserpassword     ==="+this.streetlistwiki_importeruserpassword+"===");
 			System.out.println(" .osmosis_laststatefile                   ==="+this.osmosis_laststatefile+"===");
 			System.out.println(" .logging_filename                        ==="+this.logging_filename +"===");
 			System.out.println(" .logging_console_level                   ==="+this.logging_console_level.toString() +"===");
@@ -108,6 +114,7 @@ public class Applicationconfiguration {
 
 		} catch (Exception e) {
 			System.out.println("ERROR: failed to read file ==="+configuration_filename+"===");
+			System.out.println(" (cont.)   in directory    ===" + System.getProperty("user.dir") + "===");
 			e.printStackTrace();
 			return;
 		}
