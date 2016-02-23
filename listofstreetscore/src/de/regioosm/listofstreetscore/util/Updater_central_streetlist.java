@@ -63,7 +63,7 @@ public class Updater_central_streetlist {
 	private String municipalities_identify_adminhierarchy = "";
 	private String destination = "";
 
-	private int inputfile_column_municipalityname = INPUTFILE_COLUMN_UNSET;
+/*	private int inputfile_column_municipalityname = INPUTFILE_COLUMN_UNSET;
 	private int inputfile_column_id = INPUTFILE_COLUMN_UNSET;
 	private int inputfile_column_id_first = INPUTFILE_COLUMN_UNSET;
 	private int inputfile_column_id_last = INPUTFILE_COLUMN_UNSET;
@@ -74,8 +74,8 @@ public class Updater_central_streetlist {
 	private int inputfile_min_columnnumber_for_active_lines = INPUTFILE_COLUMN_UNSET;
 	private String inputfile_header_lastline = "";
 	private String inputfile_columnsepartor = ";";
+*/
 	private boolean justsimulateimport = false;
-	
 	
 	static Applicationconfiguration configuration = new Applicationconfiguration();
 	static Connection con_listofstreets = null;
@@ -161,66 +161,6 @@ public class Updater_central_streetlist {
 	}
 
 
-	/**
-	 * @return the countryname
-	 */
-	public String getCountryname() {
-		return countryname;
-	}
-
-
-	/**
-	 * @param countryname the countryname to set
-	 */
-	public void setCountryname(String countryname) {
-		this.countryname = countryname;
-	}
-
-
-	/**
-	 * @return the copyright
-	 */
-	public String getCopyright() {
-		return copyright;
-	}
-
-
-	/**
-	 * @param copyright the copyright to set
-	 */
-	public void setCopyright(String copyright) {
-		this.copyright = copyright;
-	}
-
-
-	/**
-	 * @return the copyright
-	 */
-	public String getUseagetext() {
-		return useagetext;
-	}
-
-
-	/**
-	 * @param copyright the copyright to set
-	 */
-	public void setUseagetext(String useagetext) {
-		this.useagetext = useagetext;
-	}
-
-	/**
-	 * @return the sourcelist url
-	 */
-	public String getSourceurl() {
-		return sourceurl;
-	}
-
-	/**
-	 * @param url the url to dataset
-	 */
-	public void setSourceurl(String url) {
-		this.sourceurl = url;
-	}
 
 	/**
 	 * @return the filedate
@@ -293,186 +233,6 @@ public class Updater_central_streetlist {
 		return municipalities_identify_adminhierarchy;
 	}
 
-
-	/**
-	 * @param municipalities_identify_adminhierarchy the municipalities_identify_adminhierarchy to set
-	 */
-	public void setMunicipalities_identify_adminhierarchy(
-			String municipalities_identify_adminhierarchy) {
-		this.municipalities_identify_adminhierarchy = municipalities_identify_adminhierarchy;
-	}
-
-	/**
-	 * @return the inputfile_column_municipalityname
-	 */
-	public int getInputfile_column_municipalityname() {
-		return inputfile_column_municipalityname;
-	}
-
-	/**
-	 * @param inputfile_column_municipalityname the inputfile_column_municipalityname to set
-	 */
-	public void setInputfile_column_municipalityname(
-			int inputfile_column_municipalityname) {
-		this.inputfile_column_municipalityname = inputfile_column_municipalityname;
-	}
-
-	/**
-	 * @return the inputfile_column_id
-	 */
-	public int getInputfile_column_id() {
-		return inputfile_column_id;
-	}
-
-	/**
-	 * @return the inputfile_column_id
-	 */
-	public int getInputfile_column_id_first() {
-		return inputfile_column_id_first;
-	}
-
-	/**
-	 * @return the inputfile_column_id
-	 */
-	public int getInputfile_column_id_last() {
-		return inputfile_column_id_last;
-	}
-	
-	/**
-	 * @param inputfile_column_id the inputfile_column_id to set
-	 */
-	public void setInputfile_column_id(int inputfile_column_id) {
-		this.inputfile_column_id = inputfile_column_id;
-	}
-
-	/**
-	 * @param inputfile_column_ids the inputfile_column_id_start and  inputfile_column_id_end to set
-	 */
-	public void setInputfile_column_ids(int inputfile_column_id_first, int inputfile_column_id_last) {
-		this.inputfile_column_id_first = inputfile_column_id_first;
-		this.inputfile_column_id_last = inputfile_column_id_last;
-	}
-
-
-	/**
-	 * @return the inputfile_column_streetname
-	 */
-	public int getInputfile_column_streetname() {
-		return inputfile_column_streetname;
-	}
-
-	/**
-	 * @param inputfile_column_streetname the inputfile_column_streetname to set
-	 */
-	public void setInputfile_column_streetname(int inputfile_column_streetname) {
-		this.inputfile_column_streetname = inputfile_column_streetname;
-	}
-
-	/**
-	 * @return the inputfile_column_suburbname
-	 */
-	public int getInputfile_column_suburbname() {
-		return inputfile_column_suburbname;
-	}
-
-	/**
-	 * @param inputfile_column_suburbname the inputfile_column_suburbname to set
-	 */
-	public void setInputfile_column_suburbname(int inputfile_column_suburbname) {
-		this.inputfile_column_suburbname = inputfile_column_suburbname;
-	}
-
-	/**
-	 * @return the inputfile_column_filter
-	 */
-	public int getInputfile_column_filter() {
-		return inputfile_column_filter;
-	}
-
-
-	/**
-	 * @param inputfile_column_filter the inputfile_column_filter to set
-	 */
-	public void setInputfile_column_filter(int inputfile_column_filter) {
-		this.inputfile_column_filter = inputfile_column_filter;
-	}
-
-
-	/**
-	 * @return the inputfile_column_filtercontentmustbe
-	 */
-	public String getInputfile_column_filtercontentmustbe() {
-		return inputfile_column_filtercontentmustbe;
-	}
-
-
-	/**
-	 * @param inputfile_column_filtercontentmustbe the inputfile_column_filtercontentmustbe to set
-	 */
-	public void setInputfile_column_filtercontentmustbe(
-			String inputfile_column_filtercontentmustbe) {
-		this.inputfile_column_filtercontentmustbe = inputfile_column_filtercontentmustbe;
-	}
-
-
-	/**
-	 * @return the inputfile_min_columnnumber_for_active_lines
-	 */
-	public int getInputfile_min_columnnumber_for_active_lines() {
-		return inputfile_min_columnnumber_for_active_lines;
-	}
-
-	/**
-	 * @param inputfile_min_columnnumber_for_active_lines the inputfile_min_columnnumber_for_active_lines to set
-	 */
-	public void setInputfile_min_columnnumber_for_active_lines(
-			int inputfile_min_columnnumber_for_active_lines) {
-		this.inputfile_min_columnnumber_for_active_lines = inputfile_min_columnnumber_for_active_lines;
-	}
-
-	/**
-	 * @return the inputfile_header_lastline
-	 */
-	public String getInputfile_header_lastline() {
-		return inputfile_header_lastline;
-	}
-
-	/**
-	 * @param inputfile_header_lastline the inputfile_header_lastline to set
-	 */
-	public void setInputfile_header_lastline(String inputfile_header_lastline) {
-		this.inputfile_header_lastline = inputfile_header_lastline;
-	}
-
-	/**
-	 * @return the inputfile_columnsepartor
-	 */
-	public String getInputfile_columnsepartor() {
-		return inputfile_columnsepartor;
-	}
-
-	/**
-	 * @param inputfile_columnsepartor the inputfile_columnsepartor to set
-	 */
-	public void setInputfile_columnsepartor(String inputfile_columnsepartor) {
-		this.inputfile_columnsepartor = inputfile_columnsepartor;
-	}
-
-	/**
-	 * @return the justsimulateimport
-	 */
-	public boolean isJustsimulateimport() {
-		return justsimulateimport;
-	}
-
-
-	/**
-	 * @param justsimulateimport the justsimulateimport to set
-	 */
-	public void setJustsimulateimport(boolean justsimulateimport) {
-		this.justsimulateimport = justsimulateimport;
-	}
-
 	/**
 	 * @return the destination
 	 */
@@ -519,8 +279,21 @@ public class Updater_central_streetlist {
 		
 	}
 
-	
+	private static boolean storeMunicipalityStreets(String country, String municipality_name, Officialstreetlist_Filereader streetlist) {
+		return storeMunicipalityStreets(country, municipality_name, streetlist.getMunicipality_administrationid(), streetlist.getStreets(),
+				streetlist.getStreetrefs(), streetlist.getStreetcount(), 
+				streetlist.getOfficialsource_copyrighttext(), streetlist.getOfficialsource_useagetext(),
+				streetlist.getOfficialsource_url(), streetlist.getOfficialsource_contentdate(), streetlist.getOfficialsource_filedate());
+	}
+
 	private static boolean storeMunicipalityStreets(String country, String municipality_name, String ags, String[] streets, String[] streetids, Integer streetcount) {
+		return storeMunicipalityStreets(country, municipality_name, ags, streets, streetids, streetcount,
+				"", "", "", "", "");
+	}
+	
+	private static boolean storeMunicipalityStreets(String country, String municipality_name, String ags, String[] streets, 
+		String[] streetids, Integer streetcount,
+		String sourceCopyrighttext, String sourceUseagetext, String sourceUrl, String sourceContentdate, String sourceFiledate) {
 		// take standard municipality name at this point as unique name - COULD BE A PROBLEM because of intransparency of this action
 		String municipality_nameunique = municipality_name;
 
@@ -597,15 +370,57 @@ public class Updater_central_streetlist {
 			ResultSet municipalityQueryRS = municipalityQueryStmt.executeQuery();
 			if( municipalityQueryRS.next() ) {
 				municipality_id = municipalityQueryRS.getLong("id");
+
+				String municipalityUpdateSql = "UPDATE municipality SET"
+					+ " officialsource_copyrighttext = ?,"
+					+ " officialsource_useagetext = ?,"
+					+ " officialsource_url = ?,"
+					+ " officialsource_contentdate = ?,"		// MUST BE CASTED TO DATE
+					+ " officialsource_filedate = ?"         // MUST BE CASTED TO DATE
+					+ " WHERE id = ?;";
+				PreparedStatement municipalityUpdateStmt = con_listofstreets.prepareStatement(municipalityUpdateSql);
+				municipalityUpdateStmt.setString(1, sourceCopyrighttext);
+				municipalityUpdateStmt.setString(2, sourceUseagetext);
+				municipalityUpdateStmt.setString(3, sourceUrl);
+				municipalityUpdateStmt.setString(4, sourceContentdate);
+				municipalityUpdateStmt.setString(5, sourceFiledate);
+				municipalityUpdateStmt.setLong(6, municipality_id);
+				System.out.println("Update municipality copyright ===" + sourceCopyrighttext + "===,  useage ===" + sourceUseagetext
+					+ "=== , url ===" + sourceUrl + "===, contentdate ===" + sourceContentdate + "===, filedate ===" + sourceFiledate
+					+ "=== WHERE muni-db-id: " + municipality_id);
+				municipalityUpdateStmt.execute();
+				try {
+					municipalityQueryRS = municipalityQueryStmt.executeQuery();
+					if( municipalityQueryRS.next() ) {
+						municipality_id = municipalityQueryRS.getLong("id");
+					}
+				}
+				catch( SQLException e) {
+					e.printStackTrace();
+					System.out.println("FEHLERHAFTER Insert-Befehl sqlinsert_string ===" + municipalityUpdateSql + "===");
+					System.out.println(" Forts. FEHLER: municipality_name ==="+municipality_name+"===");
+					return false;
+				}
+				municipalityUpdateStmt.close();
+				municipalityQueryRS.close();
 			} // end of municipilaty already exists - if( rs_municipality.next() ) { 
 			else {
+				municipalityQueryRS.close();
 				String municipalityInsertSql = "INSERT INTO municipality (country_id, name, officialkeys_id, osm_relation_id, polygon_state)"
-					+ " VALUES (?, ?, ?, '', 'missing');";
-				System.out.println("Insert municipality string ===" + municipalityInsertSql + "===");
+					+ " VALUES (?, ?, ?, '', 'missing', ?, ?, ?, ?, ?);";
 				PreparedStatement municipalityInsertStmt = con_listofstreets.prepareStatement(municipalityInsertSql);
 				municipalityInsertStmt.setLong(1, country_id);
 				municipalityInsertStmt.setString(2, municipality_name);
 				municipalityInsertStmt.setString(3, ags);
+				municipalityInsertStmt.setString(4, sourceCopyrighttext);
+				municipalityInsertStmt.setString(5, sourceUseagetext);
+				municipalityInsertStmt.setString(6, sourceUrl);
+				municipalityInsertStmt.setString(7, sourceContentdate);
+				municipalityInsertStmt.setString(8, sourceFiledate);
+				System.out.println("Insert municipality country_id ===" + country_id + "===, muni-name ===" + municipality_name
+					+ "===, ags ===" + ags + "===, copyright ===" + sourceCopyrighttext + "===,  useage ===" + sourceUseagetext
+					+ "=== , url ===" + sourceUrl + "===, contentdate ===" + sourceContentdate + "===, filedate ===" + sourceFiledate
+					+ "=== WHERE muni-db-id: " + municipality_id);
 				municipalityInsertStmt.execute();
 				try {
 					municipalityQueryRS = municipalityQueryStmt.executeQuery();
@@ -696,7 +511,7 @@ public class Updater_central_streetlist {
 	}
 
 	
-	public boolean update() {
+	public boolean update(Officialstreetlist_Filereader streetlist) {
 		String				args_mode = "recentchanges";
 
 		if(getDestination().equals("")) {
@@ -708,26 +523,6 @@ public class Updater_central_streetlist {
 		Mediawiki_streetlist_article wikiartikel = new Mediawiki_streetlist_article();
 		PrintWriter wiki_output_content = null;
 
-
-		Officialstreetlist_Filereader streetlist = new Officialstreetlist_Filereader();
-
-			// File format
-			//Landkreis;Gemeindeschlüssel;Gemeindename;Straßessenname;in_OSM
-			//Hansestadt Rostock;13003000;Rostock, Hansestadt;1.St.-Jürgen-Straße;J
-		streetlist.setInputfile_column_municipalityname(getInputfile_column_municipalityname());
-		streetlist.setInputfile_column_suburbname(getInputfile_column_suburbname());
-		if(getInputfile_column_id() != INPUTFILE_COLUMN_UNSET) 
-			streetlist.setInputfile_column_id(getInputfile_column_id());
-		if(		(getInputfile_column_id_first() != INPUTFILE_COLUMN_UNSET) 
-			&&	(getInputfile_column_id_last() != INPUTFILE_COLUMN_UNSET)) {
-			streetlist.setInputfile_column_ids(getInputfile_column_id_first(), getInputfile_column_id_last());
-		}
-		streetlist.setInputfile_column_streetname(getInputfile_column_streetname());
-		streetlist.setInputfile_column_filter(getInputfile_column_filter());
-		streetlist.setInputfile_column_filtercontentmustbe(getInputfile_column_filtercontentmustbe());
-		streetlist.setInputfile_header_lastline(getInputfile_header_lastline());
-		streetlist.setInputfile_min_columnnumber_for_active_lines(getInputfile_min_columnnumber_for_active_lines());
-		streetlist.setInputfile_columnsepartor(getInputfile_columnsepartor());
 		
 		String output_municipality_filename = "";
 		String messagetext = "";
@@ -787,7 +582,7 @@ public class Updater_central_streetlist {
 					count_imported_municipalities_read++;
 					time_read_inputfile += (step_endtime.getTime()-step_starttime.getTime());
 
-					if(getCountryname().equals("Bundesrepublik Deutschland")) {
+					if(streetlist.getMunicipality_country().equals("Bundesrepublik Deutschland")) {
 						System.out.println("***************************************** Gemeindename # "+muniindex+1+" ==="+streetlist.getMunicipality_name()+"===");
 						System.out.println("    - gemeindeschluessel ==="+streetlist.getMunicipality_administrationid()+"===");
 						municipality_nameunique = germany_officialkeys_object.get_unique_municipalityname(streetlist.getMunicipality_administrationid());
@@ -828,13 +623,13 @@ public class Updater_central_streetlist {
 								streets.append("* " + streetlist.getStreets()[strassenindex]);
 							}
 						}
-
+//TODO metadate for wiki article must be set - check new officialsource... fields against old sourcelist_... fields
 						// generate new wiki pagecontent with actual streetlist version to compare
 						String list_newpagecontent = wikiartikel.erstellen(
-							getCountryname(),										//country of municipality 
+								streetlist.getMunicipality_country(),										//country of municipality 
 							municipality_nameunique,								//unique municipality name 
 							streets.toString(),										//all streets in a string, with prefixes "* "
-							getCopyright(),											//information about data usable
+							streetlist.getOfficialsource_copyrighttext(),											//information about data usable
 							"",														//String other, 
 							"", 													//String chunk,
 							configuration.streetlistwiki_importeruseraccount,						//streetlist wiki username 
@@ -855,7 +650,7 @@ public class Updater_central_streetlist {
 
 							// get actual pagecontent from streetlist wiki to compare 
 						step_starttime = new java.util.Date();
-						String wiki_actual_pagecontent = wiki_streetlist.read(args_mode,municipality_nameunique, getCountryname(), "methodoutput");
+						String wiki_actual_pagecontent = wiki_streetlist.read(args_mode,municipality_nameunique, streetlist.getMunicipality_country(), "methodoutput");
 						step_endtime = new java.util.Date();
 						String wiki_actual_pageurl = wiki_streetlist.source_url;
 						time_read_wiki += (step_endtime.getTime()-step_starttime.getTime());
@@ -886,7 +681,7 @@ public class Updater_central_streetlist {
 							new LogMessage(LogMessage.CLASS_WARNING, "updatewikineu", "municipality_nameunique", -1L, messagetext);
 						} else {
 								// get metadata about actual wiki municipality page
-							HashMap<String,String> page_metadata = listofstreetswiki.get_page_info(getCountryname(), municipality_nameunique);
+							HashMap<String,String> page_metadata = listofstreetswiki.get_page_info(streetlist.getMunicipality_country(), municipality_nameunique);
 							for (String key : page_metadata.keySet()) {
 							    System.out.println("Metadatum  Key: " + key + ", Value: " + page_metadata.get(key));
 							}
@@ -966,7 +761,7 @@ public class Updater_central_streetlist {
 						}
 	
 						if(import_actual_municipality) {
-							boolean wikipage_updated = listofstreetswiki.action(Mediawiki_API.EDIT_ACTION, getCountryname(), municipality_nameunique, list_newpagecontent, getWiki_pageupdatesummary());
+							boolean wikipage_updated = listofstreetswiki.action(Mediawiki_API.EDIT_ACTION, streetlist.getMunicipality_country(), municipality_nameunique, list_newpagecontent, getWiki_pageupdatesummary());
 							updateanzahl++;
 							System.out.println("Status-updateanzahl: "+updateanzahl);
 							System.out.println("Ergebniszustand Action: " + wikipage_updated);
@@ -981,8 +776,9 @@ public class Updater_central_streetlist {
 					} // end of if(getDestination.equals("wiki")
 					else if(getDestination().equals("db")) {
 //TODO check, if name or nameunque should be used for storing
-						boolean stored = storeMunicipalityStreets(getCountryname(), municipality_nameunique, 
-							streetlist.getMunicipality_administrationid(), streetlist.getStreets(), streetlist.getStreetrefs(), streetlist.getStreetcount());
+//						boolean stored = storeMunicipalityStreets(getCountryname(), municipality_nameunique, 
+//							streetlist.getMunicipality_administrationid(), streetlist.getStreets(), streetlist.getStreetrefs(), streetlist.getStreetcount());
+						boolean stored = storeMunicipalityStreets(streetlist.getMunicipality_country(), municipality_nameunique, streetlist);
 						if(stored) {
 							count_imported_municipalities++;
 						} else {
@@ -1061,6 +857,22 @@ public class Updater_central_streetlist {
 		System.out.println("Program time in msek: "+(program_endtime.getTime()-program_starttime.getTime()));
 
 		return true;
+	}
+
+
+	/**
+	 * @return the justsimulateimport
+	 */
+	public boolean isJustsimulateimport() {
+		return justsimulateimport;
+	}
+
+
+	/**
+	 * @param justsimulateimport the justsimulateimport to set
+	 */
+	public void setJustsimulateimport(boolean justsimulateimport) {
+		this.justsimulateimport = justsimulateimport;
 	}
 
 

@@ -17,14 +17,16 @@ package de.regioosm.listofstreetscore.imports;
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+import de.regioosm.listofstreetscore.util.Officialstreetlist_Filereader;
 import de.regioosm.listofstreetscore.util.Updater_central_streetlist;
-
 
 public class FilelistupdateDEBW {
 
 	public static void main(String args[]) {
 
-		Updater_central_streetlist streetlist = new Updater_central_streetlist();
+		Officialstreetlist_Filereader streetlist = new Officialstreetlist_Filereader();
+		Updater_central_streetlist updater = new Updater_central_streetlist();
+		
 			// File format
 			//lageschluessel;lagebezeichnung;gemeindeschluessel;gemeinde
 			//00020;Aachener Straße;08111000;Stuttgart
@@ -45,16 +47,18 @@ public class FilelistupdateDEBW {
 
 		//streetlist.addWiki_ImporterIgnore("anystreetlistwikiuserinstate_BaWue");
 
-		streetlist.setCountryname("Bundesrepublik Deutschland");
-		streetlist.setCopyright("Datenquelle: LGL, www.lgl-bw.de");
-		streetlist.setUseagetext("<a href=\"http://creativecommons.org/licenses/by/3.0/deed.de\">Lizenz CC BY 3.0");
-		streetlist.setSourceurl("https://www.lgl-bw.de/lgl-internet/opencms/de/07_Produkte_und_Dienstleistungen/Open_Data_Initiative/index.html");
-		streetlist.setFiledate("2016-02-23");
-		streetlist.setContent_date("2016-01-04");
-		streetlist.setDestination("db");
+		streetlist.setMunicipality_country("Bundesrepublik Deutschland");
+		streetlist.setOfficialsource_copyrighttext("Datenquelle: LGL, www.lgl-bw.de");
+		streetlist.setOfficialsource_useagetext("<a href=\"http://creativecommons.org/licenses/by/3.0/deed.de\">Lizenz CC BY 3.0");
+		streetlist.setOfficialsource_url("https://www.lgl-bw.de/lgl-internet/opencms/de/07_Produkte_und_Dienstleistungen/Open_Data_Initiative/index.html");
+		streetlist.setOfficialsource_filedate("2016-02-23");
+		streetlist.setOfficialsource_contentdate("2016-01-04");
+
+		
 		//streetlist.setWiki_pageupdatesummary("Import zentrales Straßenverzeichnis (ZIP-Archiv mit CSV-Datei (UTF-8), Stand ALKIS Migration 02.01.2014) vom Baden-Württembergischen Landesamt für Geoinformation und Landesentwicklung (LGL)");
 		//streetlist.setWiki_passwordstate("public");
-		
-		streetlist.update();
+		updater.setDestination("db");
+		//updater.setJustsimulateimport(true);
+		updater.update(streetlist);
 	}
 }

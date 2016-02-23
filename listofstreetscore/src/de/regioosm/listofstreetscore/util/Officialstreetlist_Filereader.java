@@ -21,6 +21,8 @@ package de.regioosm.listofstreetscore.util;
 import java.io.*;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.regex.Pattern;
 
 
@@ -67,16 +69,34 @@ public class Officialstreetlist_Filereader {
 	 */
   	private String municipality_administrationid = "";
   	private String municipality_osmrelationid = "";
+	private String municipalities_identify_adminhierarchy = "";
 	private String[] strassen;
 	private String[] streetsuburbs;
 	private String[] streetrefs;
 	private int strassenanzahl;
-	private String source_url = "";
+	@Deprecated
+	private String source_url = "";	
 	private String password_status = "";
+	@Deprecated
 	private String source_text = "";
+	@Deprecated
 	private String source_deliverydate = "";
+	@Deprecated
 	private String source_source = "";
+	@Deprecated
 	private String source_filedate = "";
+	
+	private String officialsource_url = "";
+	private String officialsource_contentdate = "";
+	private String officialsource_filedate = "";
+	private String officialsource_copyrighttext = "";
+	private String officialsource_useagetext = "";
+	
+	private String inputdirectory = "";
+	private List<String> filelist = new ArrayList<String>();
+	private String output_municipality_directory = "wikineu";
+	private String output_wiki_directory = "wikiaktuell";
+	
 	/**
 	 * informs call class about already read number of municipalities via calls of read_next_municipality
 	 */
@@ -373,15 +393,17 @@ public class Officialstreetlist_Filereader {
 	}
 
 	/**
-	 * @return the source_url
+	 * @return the url from listofstreets wiki
 	 */
+	@Deprecated
 	public String getSource_url() {
 		return source_url;
 	}
 
 	/**
-	 * @param source_url the source_url to set
+	 * @param source_url the url to the street list in listofstreets wiki - use setOfficialsourceUrl instead
 	 */
+	@Deprecated
 	private void setSource_url(String source_url) {
 		this.source_url = source_url;
 	}
@@ -401,29 +423,33 @@ public class Officialstreetlist_Filereader {
 	}
 
 	/**
-	 * @return the source_text
+	 * @return some information about where the list come from - very seldom used
 	 */
+	@Deprecated
 	public String getSource_text() {
 		return source_text;
 	}
 
 	/**
-	 * @param source_text the source_text to set
+	 * @param source_text don't use this - use setOfficialsourceCopyrighttext instead
 	 */
+	@Deprecated
 	private void setSource_text(String source_text) {
 		this.source_text = source_text;
 	}
 
 	/**
-	 * @return the source_deliverydate
+	 * @return - don't used this, use getOfficialsourceContentdate instead
 	 */
+	@Deprecated
 	public String getSource_deliverydate() {
 		return source_deliverydate;
 	}
 
 	/**
-	 * @param source_deliverydate the source_deliverydate to set
+	 * @param source_deliverydate - don't use this, use setOfficialsourceContentdate instead
 	 */
+	@Deprecated
 	private void setSource_deliverydate(String source_deliverydate) {
 		this.source_deliverydate = source_deliverydate;
 	}
@@ -431,6 +457,7 @@ public class Officialstreetlist_Filereader {
 	/**
 	 * @return the source_source
 	 */
+	@Deprecated
 	public String getSource_source() {
 		return source_source;
 	}
@@ -438,6 +465,7 @@ public class Officialstreetlist_Filereader {
 	/**
 	 * @param source_source the source_source to set
 	 */
+	@Deprecated
 	private void setSource_source(String source_source) {
 		this.source_source = source_source;
 	}
@@ -445,6 +473,7 @@ public class Officialstreetlist_Filereader {
 	/**
 	 * @return the source_filedate
 	 */
+	@Deprecated
 	public String getSource_filedate() {
 		return source_filedate;
 	}
@@ -452,10 +481,165 @@ public class Officialstreetlist_Filereader {
 	/**
 	 * @param source_filedate the source_filedate to set
 	 */
+	@Deprecated
 	private void setSource_filedate(String source_filedate) {
 		this.source_filedate = source_filedate;
 	}
 
+
+	/**
+	 * @return the officialsource_url
+	 */
+	public String getOfficialsource_url() {
+		return officialsource_url;
+	}
+
+	/**
+	 * @param officialsource_url the officialsource_url to set
+	 */
+	public void setOfficialsource_url(String officialsource_url) {
+		this.officialsource_url = officialsource_url;
+	}
+
+	/**
+	 * @return the officialsource_contentdate
+	 */
+	public String getOfficialsource_contentdate() {
+		return officialsource_contentdate;
+	}
+
+	/**
+	 * @param officialsource_contentdate the officialsource_contentdate to set
+	 */
+	public void setOfficialsource_contentdate(String officialsource_contentdate) {
+		this.officialsource_contentdate = officialsource_contentdate;
+	}
+
+	/**
+	 * @return the officialsource_filedate
+	 */
+	public String getOfficialsource_filedate() {
+		return officialsource_filedate;
+	}
+
+	/**
+	 * @param officialsource_filedate the officialsource_filedate to set
+	 */
+	public void setOfficialsource_filedate(String officialsource_filedate) {
+		this.officialsource_filedate = officialsource_filedate;
+	}
+
+	/**
+	 * @return the officialsource_copyrighttext
+	 */
+	public String getOfficialsource_copyrighttext() {
+		return officialsource_copyrighttext;
+	}
+
+	/**
+	 * @param officialsource_copyrighttext the officialsource_copyrighttext to set
+	 */
+	public void setOfficialsource_copyrighttext(
+			String officialsource_copyrighttext) {
+		this.officialsource_copyrighttext = officialsource_copyrighttext;
+	}
+
+	/**
+	 * @return the officialsource_useagetext
+	 */
+	public String getOfficialsource_useagetext() {
+		return officialsource_useagetext;
+	}
+
+	/**
+	 * @param officialsource_useagetext the officialsource_useagetext to set
+	 */
+	public void setOfficialsource_useagetext(String officialsource_useagetext) {
+		this.officialsource_useagetext = officialsource_useagetext;
+	}
+
+
+	/**
+	 * @return the municipalities_identify_adminhierarchy
+	 */
+	public String getMunicipalities_identify_adminhierarchy() {
+		return municipalities_identify_adminhierarchy;
+	}
+
+	/**
+	 * @param municipalities_identify_adminhierarchy the municipalities_identify_adminhierarchy to set
+	 */
+	public void setMunicipalities_identify_adminhierarchy(
+			String municipalities_identify_adminhierarchy) {
+		this.municipalities_identify_adminhierarchy = municipalities_identify_adminhierarchy;
+	}
+
+	/**
+	 * @return the inputdirectory
+	 */
+	public String getInputdirectory() {
+		return inputdirectory;
+	}
+
+
+	/**
+	 * @param inputdirectory the inputdirectory to set
+	 */
+	public void setInputdirectory(String inputdirectory) {
+		this.inputdirectory = inputdirectory;
+	}
+
+
+	/**
+	 * @return the filelist
+	 */
+	public List<String> getFilelist() {
+		return filelist;
+	}
+
+
+	/**
+	 * @param filelist the filelist to add a single file
+	 */
+	public void addFile(String filename) {
+		this.filelist.add(filename);
+	}
+
+
+	/**
+	 * @return the output_municipality_directoy
+	 */
+	public String getOutput_municipality_directory() {
+		return output_municipality_directory;
+	}
+
+
+	/**
+	 * @param output_municipality_directoy the output_municipality_directoy to set
+	 */
+	public void setOutput_municipality_directory(
+			String output_municipality_directory) {
+		this.output_municipality_directory = output_municipality_directory;
+	}
+
+
+	/**
+	 * @return the output_wiki_directoy
+	 */
+	public String getOutput_wiki_directory() {
+		return output_wiki_directory;
+	}
+
+
+	/**
+	 * @param output_wiki_directoy the output_wiki_directoy to set
+	 */
+	public void setOutput_wiki_directory(String output_wiki_directory) {
+		this.output_wiki_directory = output_wiki_directory;
+	}
+
+	
+	
 	/**
 	 * @return the number_municipality_already_read
 	 */
@@ -471,7 +655,7 @@ public class Officialstreetlist_Filereader {
 		this.number_municipality_already_read = number_municipality_already_read;
 	}
 
-
+	
 	
 	
 	/**
