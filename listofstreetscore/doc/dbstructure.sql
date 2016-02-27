@@ -79,7 +79,7 @@ CREATE TABLE municipality
   sourcelist_source               text,                          -- depricated from 2016-02-23 on - only a few records are set. Earlier entries for Florian-Lohoff and Sven-Anders source - See new version officialsource_copyrightext
   sourcelist_deliverydate         text,                          -- depricated from 2016-02-23 on - wasn't filled anythinbg - See new version officialsource_contentdate
   sourcelist_filedate             text,                          -- depricated from 2016-02-23 on - had listofstreets wiki last modified date. See new version officialsource_filedate
-  officialsource_copyrightext     text,                          -- new 2016-02-23 - copyright text from originator
+  officialsource_copyrighttext    text,                          -- new 2016-02-23 - copyright text from originator
   officialsource_useagetext       text,                          -- new 2016-02-23 - useage text, normally formal license text and/or link, or explicit useage for osm
   officialsource_url              text,                          -- new 2016-02-23 - url to street list itself or explaining page with link to street list
   officialsource_contentdate      date,                          -- new 2016-02-23 - date of content in street list 
