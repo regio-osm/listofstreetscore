@@ -25,10 +25,14 @@ import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.nio.charset.StandardCharsets;
 import java.sql.Connection;
+import java.sql.Date;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -46,103 +50,19 @@ import de.regioosm.listofstreetscore.util.Streetlist_from_streetlistwiki;
 public class Updater_central_streetlist {
 	private final int INPUTFILE_COLUMN_UNSET = -1;
 
-	private String inputdirectory = "";
-	private List<String> filelist = new ArrayList<String>();
-	private String output_municipality_directory = "wikineu";
-	private String output_wiki_directory = "wikiaktuell";
 	private List<String> Wiki_ImporterIgnorelist = new ArrayList<String>();
 
-	private String countryname = "Bundesrepublik Deutschland";
-	private String copyright = "";
-	private String useagetext = "";
-	private String sourceurl = "";
-	private String filedate = "";
-	private String content_date = "";
 	private String wiki_pageupdatesummary = "";
 	private String wiki_passwordstate = "";
 	private String municipalities_identify_adminhierarchy = "";
 	private String destination = "";
 
-/*	private int inputfile_column_municipalityname = INPUTFILE_COLUMN_UNSET;
-	private int inputfile_column_id = INPUTFILE_COLUMN_UNSET;
-	private int inputfile_column_id_first = INPUTFILE_COLUMN_UNSET;
-	private int inputfile_column_id_last = INPUTFILE_COLUMN_UNSET;
-	private int inputfile_column_streetname = INPUTFILE_COLUMN_UNSET;
-	private int inputfile_column_suburbname = INPUTFILE_COLUMN_UNSET;
-	private int inputfile_column_filter = INPUTFILE_COLUMN_UNSET;						// special column to identify and analyse in Thüringen central streetlist
-	private String inputfile_column_filtercontentmustbe = "";							// special column content to filter positive in Thüringen central streetlist
-	private int inputfile_min_columnnumber_for_active_lines = INPUTFILE_COLUMN_UNSET;
-	private String inputfile_header_lastline = "";
-	private String inputfile_columnsepartor = ";";
-*/
 	private boolean justsimulateimport = false;
 	
 	static Applicationconfiguration configuration = new Applicationconfiguration();
 	static Connection con_listofstreets = null;
-	
-	/**
-	 * @return the inputdirectory
-	 */
-	public String getInputdirectory() {
-		return inputdirectory;
-	}
 
 
-	/**
-	 * @param inputdirectory the inputdirectory to set
-	 */
-	public void setInputdirectory(String inputdirectory) {
-		this.inputdirectory = inputdirectory;
-	}
-
-
-	/**
-	 * @return the filelist
-	 */
-	public List<String> getFilelist() {
-		return filelist;
-	}
-
-
-	/**
-	 * @param filelist the filelist to add a single file
-	 */
-	public void addFile(String filename) {
-		this.filelist.add(filename);
-	}
-
-
-	/**
-	 * @return the output_municipality_directoy
-	 */
-	public String getOutput_municipality_directory() {
-		return output_municipality_directory;
-	}
-
-
-	/**
-	 * @param output_municipality_directoy the output_municipality_directoy to set
-	 */
-	public void setOutput_municipality_directory(
-			String output_municipality_directory) {
-		this.output_municipality_directory = output_municipality_directory;
-	}
-
-
-	/**
-	 * @return the output_wiki_directoy
-	 */
-	public String getOutput_wiki_directory() {
-		return output_wiki_directory;
-	}
-
-
-	/**
-	 * @param output_wiki_directoy the output_wiki_directoy to set
-	 */
-	public void setOutput_wiki_directory(String output_wiki_directory) {
-		this.output_wiki_directory = output_wiki_directory;
-	}
 
 
 	/**
@@ -161,37 +81,6 @@ public class Updater_central_streetlist {
 	}
 
 
-
-	/**
-	 * @return the filedate
-	 */
-	public String getFiledate() {
-		return filedate;
-	}
-
-
-	/**
-	 * @param filedate the filedate to set
-	 */
-	public void setFiledate(String filedate) {
-		this.filedate = filedate;
-	}
-
-
-	/**
-	 * @return the content_date
-	 */
-	public String getContent_date() {
-		return content_date;
-	}
-
-
-	/**
-	 * @param content_date the content_date to set
-	 */
-	public void setContent_date(String content_date) {
-		this.content_date = content_date;
-	}
 
 
 	/**
@@ -296,6 +185,7 @@ public class Updater_central_streetlist {
 		String sourceCopyrighttext, String sourceUseagetext, String sourceUrl, String sourceContentdate, String sourceFiledate) {
 		// take standard municipality name at this point as unique name - COULD BE A PROBLEM because of intransparency of this action
 		String municipality_nameunique = municipality_name;
+		DateFormat date_formatter = new SimpleDateFormat("yyyy-MM-dd");		// in iso8601 format, with timezone
 
 		try {
 			// If there is only a osm relation id available, get the municipality-record with this id
@@ -382,8 +272,28 @@ public class Updater_central_streetlist {
 				municipalityUpdateStmt.setString(1, sourceCopyrighttext);
 				municipalityUpdateStmt.setString(2, sourceUseagetext);
 				municipalityUpdateStmt.setString(3, sourceUrl);
-				municipalityUpdateStmt.setString(4, sourceContentdate);
-				municipalityUpdateStmt.setString(5, sourceFiledate);
+				if(!sourceContentdate.equals("")) {
+					try {
+						java.util.Date tempdate = date_formatter.parse(sourceContentdate);
+						municipalityUpdateStmt.setDate(4, new java.sql.Date(tempdate.getTime()));
+					} catch (ParseException e1) {
+						System.out.println("Parameter sourceContentdate could not be parsed as date, content ===" + sourceContentdate + "===");
+						e1.printStackTrace();
+						municipalityUpdateStmt.setDate(4, null);
+					}
+				} else
+					municipalityUpdateStmt.setDate(4, null);
+				if(!sourceFiledate.equals("")) {
+					try {
+						java.util.Date tempdate = date_formatter.parse(sourceContentdate);
+						municipalityUpdateStmt.setDate(5, new java.sql.Date(tempdate.getTime()));
+					} catch (ParseException e1) {
+						System.out.println("Parameter sourceFiledate could not be parsed as date, content ===" + sourceFiledate + "===");
+						e1.printStackTrace();
+						municipalityUpdateStmt.setDate(5, null);
+					}
+				} else
+					municipalityUpdateStmt.setDate(5, null);				
 				municipalityUpdateStmt.setLong(6, municipality_id);
 				System.out.println("Update municipality copyright ===" + sourceCopyrighttext + "===,  useage ===" + sourceUseagetext
 					+ "=== , url ===" + sourceUrl + "===, contentdate ===" + sourceContentdate + "===, filedate ===" + sourceFiledate
@@ -406,7 +316,8 @@ public class Updater_central_streetlist {
 			} // end of municipilaty already exists - if( rs_municipality.next() ) { 
 			else {
 				municipalityQueryRS.close();
-				String municipalityInsertSql = "INSERT INTO municipality (country_id, name, officialkeys_id, osm_relation_id, polygon_state)"
+				String municipalityInsertSql = "INSERT INTO municipality (country_id, name, officialkeys_id, osm_relation_id, polygon_state,"
+					+ "officialsource_copyrighttext, officialsource_useagetext, officialsource_url, officialsource_contentdate, officialsource_filedate)"
 					+ " VALUES (?, ?, ?, '', 'missing', ?, ?, ?, ?, ?);";
 				PreparedStatement municipalityInsertStmt = con_listofstreets.prepareStatement(municipalityInsertSql);
 				municipalityInsertStmt.setLong(1, country_id);
@@ -415,8 +326,28 @@ public class Updater_central_streetlist {
 				municipalityInsertStmt.setString(4, sourceCopyrighttext);
 				municipalityInsertStmt.setString(5, sourceUseagetext);
 				municipalityInsertStmt.setString(6, sourceUrl);
-				municipalityInsertStmt.setString(7, sourceContentdate);
-				municipalityInsertStmt.setString(8, sourceFiledate);
+				if(!sourceContentdate.equals("")) {
+					try {
+						java.util.Date tempdate = date_formatter.parse(sourceContentdate);
+						municipalityInsertStmt.setDate(7, new java.sql.Date(tempdate.getTime()));
+					} catch (ParseException e1) {
+						System.out.println("Parameter sourceContentdate could not be parsed as date, content ===" + sourceContentdate + "===");
+						e1.printStackTrace();
+						municipalityInsertStmt.setDate(7, null);
+					}
+				} else
+					municipalityInsertStmt.setDate(7, null);
+				if(!sourceFiledate.equals("")) {
+					try {
+						java.util.Date tempdate = date_formatter.parse(sourceFiledate);
+						municipalityInsertStmt.setDate(8, new java.sql.Date(tempdate.getTime()));
+					} catch (ParseException e1) {
+						System.out.println("Parameter sourceFiledate could not be parsed as date, content ===" + sourceFiledate + "===");
+						e1.printStackTrace();
+						municipalityInsertStmt.setDate(8, null);
+					}
+				} else
+					municipalityInsertStmt.setDate(8, null);
 				System.out.println("Insert municipality country_id ===" + country_id + "===, muni-name ===" + municipality_name
 					+ "===, ags ===" + ags + "===, copyright ===" + sourceCopyrighttext + "===,  useage ===" + sourceUseagetext
 					+ "=== , url ===" + sourceUrl + "===, contentdate ===" + sourceContentdate + "===, filedate ===" + sourceFiledate
@@ -463,9 +394,9 @@ public class Updater_central_streetlist {
 			}
 			deleteStreetsStmt.close();
 		}
-		catch( SQLException e) {
+		catch( SQLException sqle) {
 			System.out.println("Error occured while tried to delete streets in streetoriginal");
-			e.printStackTrace();
+			sqle.printStackTrace();
 			return false;
 		}
 		
@@ -475,11 +406,11 @@ public class Updater_central_streetlist {
 		String insertStreetSql = "";
 		PreparedStatement insertStreetStmt = null;
 	
-		try {
-			for(Integer streetindex = 0; streetindex < streetcount; streetindex++) {
-				String street = streets[streetindex];
-				String streetref = streetids[streetindex];
-	
+		for(Integer streetindex = 0; streetindex < streetcount; streetindex++) {
+			String street = streets[streetindex];
+			String streetref = streetids[streetindex];
+
+			try {
 				insertStreetSql = "INSERT INTO streetoriginal (country_id, municipality_id, name, streetref) VALUES (?, ?, ?, ?);";
 				insertStreetStmt = con_listofstreets.prepareStatement(insertStreetSql);
 				insertStreetStmt.setLong(1, country_id);
@@ -489,24 +420,18 @@ public class Updater_central_streetlist {
 				System.out.println("insert streetoriginal   country_id " + country_id + "   muni-id " + municipality_id + "   .street ===" + street + "===   ref ===" + streetref + "===");
 				if((streets_imported % 100) == 0)
 					System.out.println("  beim importieren Zwischenmeldung bei # "+streets_imported+"  ist konkret ===" + street + "===");
-				try {
-					insertStreetStmt.executeUpdate();
-					streets_imported++;
-				}
-				catch( SQLException e) {
-					e.printStackTrace();
-					System.out.println("FEHLERHAFTER Insert-Befehl insertbefehl_street ===" + insertStreetSql + "===");
-					System.out.println(" Forts. FEHLER: municipality_name ===" + municipality_name + "=== strasse ===" + street + "===");
-					System.out.println(" Forts.                    Straße ===" + street + "===     Ref ===" + streetref + "===");
-				}
+				insertStreetStmt.executeUpdate();
+				streets_imported++;
+				insertStreetStmt.close();
 			}
-			insertStreetStmt.close();
+			catch( SQLException insertsqle) {
+				insertsqle.printStackTrace();
+				System.out.println("FEHLERHAFTER Insert-Befehl insertbefehl_street ===" + insertStreetSql + "===");
+				System.out.println(" Forts. FEHLER: municipality_name ===" + municipality_name + "=== strasse ===" + street + "===");
+				System.out.println(" Forts.                    Straße ===" + street + "===     Ref ===" + streetref + "===");
+			}
 		}
-		catch( SQLException e) {
-			System.out.println("Error occured while tried insert streets");
-			e.printStackTrace();
-			return false;
-		}
+		System.out.println("  Number of streets, insert into db: " + streetcount);
 		return true;
 	}
 
@@ -565,10 +490,10 @@ public class Updater_central_streetlist {
 			int count_municipalities_netto_unterschiedlich = 0;
 			
 				// Loop over all input files (MeVo has only 1 central file)
-			for(String act_filename : getFilelist()) {
+			for(String act_filename : streetlist.getFilelist()) {
 				System.out.println("Verarbeite Datei ==="+act_filename+"===");
 				String municipality_nameunique = "";
-				streetlist.openFile(getInputdirectory()+"/"+act_filename, StandardCharsets.UTF_8);
+				streetlist.openFile(streetlist.getInputdirectory()+"/"+act_filename, StandardCharsets.UTF_8);
 					// Loop over all municipalities in input file
 				for(Integer muniindex=0;muniindex<30000;muniindex++) {
 
@@ -637,12 +562,12 @@ public class Updater_central_streetlist {
 							streetlist.getMunicipality_administrationid(),			//unique id of municipality in country (in germany AGS gemeindeschluessel) 
 							"",														//optionaly osm relation id, if unique id of municipality should not be avaiable 
 							getWiki_passwordstate(),								//streetlist wiki information about visibility of wiki page
-							getContent_date(),										//information, how actually file content is
+							streetlist.getOfficialsource_contentdate(),										//information, how actually file content is
 							"text"													//output format (xml or text)
 						);
 
 						list_newpagecontent = list_newpagecontent.trim();
-						output_municipality_filename = getOutput_municipality_directory() + "/" + IOHelper.toFileSystemSafeName(municipality_nameunique) + ".wikiarticle";
+						output_municipality_filename = streetlist.getOutput_municipality_directory() + "/" + IOHelper.toFileSystemSafeName(municipality_nameunique) + ".wikiarticle";
 						wiki_output_content = new PrintWriter(new BufferedWriter(new OutputStreamWriter(new FileOutputStream(output_municipality_filename),StandardCharsets.UTF_8)));
 						wiki_output_content.println(list_newpagecontent);
 						wiki_output_content.close();
@@ -667,7 +592,7 @@ public class Updater_central_streetlist {
 						System.out.println("Status-wikianzahl: "+wikianzahl);
 
 							// write actual wiki content to file directory as backup and file compage during application development
-						output_municipality_filename = getOutput_wiki_directory() + "/" + IOHelper.toFileSystemSafeName(municipality_nameunique) + ".wikiarticle";
+						output_municipality_filename = streetlist.getOutput_wiki_directory() + "/" + IOHelper.toFileSystemSafeName(municipality_nameunique) + ".wikiarticle";
 						wiki_output_content = new PrintWriter(new BufferedWriter(new OutputStreamWriter(new FileOutputStream(output_municipality_filename),StandardCharsets.UTF_8)));
 						wiki_output_content.println(wiki_actual_pagecontent);
 						wiki_output_content.close();
