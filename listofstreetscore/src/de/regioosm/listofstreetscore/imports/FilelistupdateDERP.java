@@ -21,7 +21,20 @@ package de.regioosm.listofstreetscore.imports;
 import de.regioosm.listofstreetscore.util.Officialstreetlist_Filereader;
 import de.regioosm.listofstreetscore.util.Updater_central_streetlist;
 
-
+/**
+ * Import central official street list for country Germany, state Rheinland-Pfalz
+ * into listofstreets evaluation DB.
+ * Prior to 2016-02, the list was imported into evaluation Wiki for interactive manipulation
+ * through OSM users, but after 2016-02, the list will be imported directly into DB and
+ * OSM users can manipulate street lists through website on evaluation pages.
+ * 
+ * This class will be run directly on evaluation server on command line.
+ * Some file path and names must be configured in source code directly, sorry.
+ * 
+ * @author Dietmar Seifert
+ * @version 3.0
+ *
+ */
 public class FilelistupdateDERP {
 
 	public static void main(String args[]) {
@@ -44,19 +57,21 @@ public class FilelistupdateDERP {
 		
 		streetlist.setMunicipalities_identify_adminhierarchy("%Rheinland-Pfalz%");
 
-		streetlist.setInputdirectory("/home/openstreetmap/NASI/OSMshare/programme/workspace/listofstreets/data/RP/2014-01");
-		streetlist.setOutput_municipality_directory(streetlist.getInputdirectory() + "/" + "20140113_neu-Wiki-Update201401");
-		streetlist.setOutput_wiki_directory(streetlist.getInputdirectory() + "/" + "20140113_Stand-Wiki_vor_Update201401");
-		streetlist.addFile("strassen_rlp_2014-01-utf8.txt");
+		streetlist.setInputdirectory("/home/openstreetmap/NASI/OSMshare/Projekte-Zusammenarbeiten/Straßenlisten-ab-2012-11/Deutschland/RheinlandPfalz-zentraleListe/2016-02");
+		streetlist.setOutput_municipality_directory(streetlist.getInputdirectory() + "/" + "201602_neu-Wiki-Update201602");
+		streetlist.setOutput_wiki_directory(streetlist.getInputdirectory() + "/" + "201602_Stand-Wiki_vor_Update201602");
+		streetlist.addFile("strassen_rlp_2016-02-utf8.txt");
 
 		//streetlist.addWiki_ImporterIgnore("anystreetlistwikiuserinstate_BaWue");
 
 		streetlist.setMunicipality_country("Bundesrepublik Deutschland");
-		streetlist.setOfficialsource_copyrighttext("Ohne Nutzungsbeschränkung, Daten: [http://www.kommwis.de/kommwis/Dokumente/Tabellen/ Straßentabelle Rheinland-Pfalz]\n\nDatenstand: 01.01.2014");
-		streetlist.setOfficialsource_filedate("");
-		streetlist.setOfficialsource_contentdate("");
-		//streetlist.setWiki_pageupdatesummary("Import zentrales Straßenverzeichnis KommWis Gesellschaft für Kommunikation und Wissenstransfer mbH, Mainz");
-		//streetlist.setWiki_passwordstate("public");
+		streetlist.setOfficialsource_copyrighttext("KommWis Gesellschaft für Kommunikation und Wissenstransfer mbH, Mainz");
+		streetlist.setOfficialsource_useagetext("Ohne Nutzungsbeschränkung");
+		streetlist.setOfficialsource_url("http://www.kommwis.de/kommwis/Dokumente/Tabellen");
+		streetlist.setOfficialsource_filedate("2016-02-23");
+		streetlist.setOfficialsource_contentdate("2016-02-01");
+		//updater.setWiki_pageupdatesummary("Import zentrales Straßenverzeichnis KommWis Gesellschaft für Kommunikation und Wissenstransfer mbH, Mainz");
+		//updater.setWiki_passwordstate("public");
 		
 		updater.setDestination("db");
 		//updater.setJustsimulateimport(true);

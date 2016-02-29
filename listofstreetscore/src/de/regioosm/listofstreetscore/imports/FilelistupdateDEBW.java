@@ -20,6 +20,20 @@ package de.regioosm.listofstreetscore.imports;
 import de.regioosm.listofstreetscore.util.Officialstreetlist_Filereader;
 import de.regioosm.listofstreetscore.util.Updater_central_streetlist;
 
+/**
+ * Import central official street list for country Germany, state Baden-Württemberg
+ * into listofstreets evaluation DB.
+ * Prior to 2016-02, the list was imported into evaluation Wiki for interactive manipulation
+ * through OSM users, but after 2016-02, the list will be imported directly into DB and
+ * OSM users can manipulate street lists through website on evaluation pages.
+ * 
+ * This class will be run directly on evaluation server on command line.
+ * Some file path and names must be configured in source code directly, sorry.
+ * 
+ * @author Dietmar Seifert
+ * @version 3.0
+ *
+ */
 public class FilelistupdateDEBW {
 
 	public static void main(String args[]) {
