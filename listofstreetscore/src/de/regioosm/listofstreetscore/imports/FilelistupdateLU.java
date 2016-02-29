@@ -10,12 +10,15 @@ import java.sql.Statement;
 
 import de.regioosm.listofstreetscore.util.Applicationconfiguration;
 
-
-public class local_list_mv_to_db {
+/*  import of street list file for Luxembourg - will be delivered from a luxembourg OSM Mapper
+ * 
+ */
+public class FilelistupdateLU {
 	static Applicationconfiguration configuration = new Applicationconfiguration();
 
 
-	private static boolean storeMunicipalityStreets(String country, String municipality_name, String ags, String[] streets, String[] streetids, Integer streetcount) {
+	private static void storeMunicipalityStreets(String country, String municipality_name, String ags, 
+		String[] streets, String[] streetids, String[] streetsuburbs, Integer streetcount) {
 		// take standard municipality name at this point as unique name - COULD BE A PROBLEM because of intransparency of this action
 		String municipality_nameunique = municipality_name;
 
@@ -40,14 +43,13 @@ public class local_list_mv_to_db {
 					}
 				}
 			} else {
-				System.out.println("ERROR: municipality could not be verified due to missing officialkeys-id ");
-				return false;
+				System.out.println("WARNING: municipality could not be verified due to missing officialkeys-id ");
 			}
 		}
 		catch( SQLException e) {
 			System.out.println("Error occured while tried to connect to database");
 			e.printStackTrace();
-			return false;
+			return;
 		}
 		if( ! municipality_nameunique.equals(municipality_name)) {
 			System.out.println("Warning: change municipality name from file ==="+municipality_name+"=== to unique name ==="+municipality_nameunique+"===");
@@ -67,7 +69,7 @@ public class local_list_mv_to_db {
 				country_id = existingcountryRS.getLong("id");
 			} else {
 				System.out.println("ERROR, Country unknown");
-				return false;
+				return;
 			}
 			existingcountryRS.close();
 			selectqueryStmt.close();
@@ -75,17 +77,17 @@ public class local_list_mv_to_db {
 		catch( SQLException e) {
 			System.out.println("Error occured while query country");
 			e.printStackTrace();
-			return false;
+			return;
 		}
 		
 
 		try {
 			String municipalityQuerySql = "SELECT id, name, osm_hierarchy FROM municipality WHERE country_id = ?"
-				+ "AND officialkeys_id = ?;";
+				+ " AND name = ?;";
 			System.out.println("Info: select query for searching in municipality ===" + municipalityQuerySql + "===");
 			PreparedStatement municipalityQueryStmt = con_listofstreets.prepareStatement(municipalityQuerySql);
 			municipalityQueryStmt.setLong(1, country_id);
-			municipalityQueryStmt.setString(2, ags);
+			municipalityQueryStmt.setString(2, municipality_name);
 			ResultSet municipalityQueryRS = municipalityQueryStmt.executeQuery();
 			if( municipalityQueryRS.next() ) {
 				municipality_id = municipalityQueryRS.getLong("id");
@@ -109,7 +111,7 @@ public class local_list_mv_to_db {
 					e.printStackTrace();
 					System.out.println("FEHLERHAFTER Insert-Befehl sqlinsert_string ===" + municipalityInsertSql + "===");
 					System.out.println(" Forts. FEHLER: municipality_name ==="+municipality_name+"===");
-					return false;
+					return;
 				}
 				municipalityInsertStmt.close();
 			}
@@ -119,7 +121,7 @@ public class local_list_mv_to_db {
 		catch( SQLException e) {
 			System.out.println("Error occured while tried to get municipality");
 			e.printStackTrace();
-			return false;
+			return;
 		}
 		
 //TODO complete transaction mode		
@@ -131,14 +133,16 @@ public class local_list_mv_to_db {
 			for(Integer streetindex = 0; streetindex < streetcount; streetindex++) {
 				String street = streets[streetindex];
 				String streetref = streetids[streetindex];
+				String streetsuburb = streetsuburbs[streetindex];
 	
-				insertStreetSql = "INSERT INTO streetoriginal (country_id, municipality_id, name, streetref) VALUES (?, ?, ?, ?);";
+				insertStreetSql = "INSERT INTO street (country_id, municipality_id, name, municipality_addition, streetref) VALUES (?, ?, ?, ?, ?);";
 				insertStreetStmt = con_listofstreets.prepareStatement(insertStreetSql);
 				insertStreetStmt.setLong(1, country_id);
 				insertStreetStmt.setLong(2, municipality_id);
 				insertStreetStmt.setString(3, street);
-				insertStreetStmt.setString(4, streetref);
-				System.out.println("insert streetoriginal ===" + insertStreetSql + "===");
+				insertStreetStmt.setString(4, streetsuburb);
+				insertStreetStmt.setString(5, streetref);
+				System.out.println("insert street ===" + street + "===, streetref ===" + streetref + "===");
 	
 			
 				if((streets_imported % 100) == 0)
@@ -159,9 +163,9 @@ public class local_list_mv_to_db {
 		catch( SQLException e) {
 			System.out.println("Error occured while tried insert streets");
 			e.printStackTrace();
-			return false;
+			return;
 		}
-		return true;
+
 	}
 
 	
@@ -212,22 +216,17 @@ public class local_list_mv_to_db {
 					System.out.println("Spalte ["+inti+"] ==="+act_line_columns[inti]+"===");
 
 
-				if(act_line_columns.length < 9) {
-					System.out.println("ERROR: less than 9 columns ("+act_line_columns.length+"), line was ==="+dateizeile+"===  IGNORED");
+				if(act_line_columns.length < 3) {
+					System.out.println("ERROR: less than 3 columns ("+act_line_columns.length+"), line was ==="+dateizeile+"===  IGNORED");
 					continue;
 				}
 		
-				if( (! municipality_gemeindeschluessel.equals(act_line_columns[0])) && (! municipality_gemeindeschluessel.equals(""))) {
-					System.out.println("Information: changed municipality in line "+file_lineno+"  from gemeindeschluessel ==="+municipality_gemeindeschluessel+"=== to ==="+act_line_columns[0]+"===");
+				if( (! municipality_name.equals(act_line_columns[0])) && (! municipality_name.equals(""))) {
+					System.out.println("Information: changed municipality in line "+file_lineno+"  from name ==="+municipality_name+"=== to ==="+act_line_columns[0]+"===");
 		
 					if(strassenanzahl > 0) {
-						boolean stored = storeMunicipalityStreets(global_const_countryname, municipality_name, municipality_gemeindeschluessel, strassen, strassenid, strassenanzahl);
-						if(stored) {
-							municipality_count++;
-						} else {
-							System.out.println("ERROR ERROR: streets for municipality ===" + municipality_name + "=== could not be stored");
-						}
-							
+						storeMunicipalityStreets(global_const_countryname, municipality_name, municipality_gemeindeschluessel, strassen, strassenid, streetsuburbs, strassenanzahl);
+						municipality_count++;
 				 	} // end of found streets when regionalkey changed: if(strassenanzahl > 0) {
 		
 					municipality_gemeindeschluessel = "";
@@ -240,17 +239,17 @@ public class local_list_mv_to_db {
 				//#id_Gemeinde	Gemeinde_Name	id_Strasse	Strasse_Name	id_Amt	Amt_Name	id_Kreis	Kreis_Name	de:strassenschluessel
 				//13003000	Rostock, Hansestadt	00010	1.St.-Jürgen-Straße	0001	kreisfreie Stadt	13003	Hansestadt Rostock	13003000000100010
 
-				municipality_gemeindeschluessel = act_line_columns[0];
-				municipality_name = act_line_columns[1];
-municipality_submunicipalityname = "";
+				//municipality_gemeindeschluessel = act_line_columns[0];
+				municipality_name = act_line_columns[0];
+municipality_submunicipalityname = act_line_columns[1];
 				if(municipality_submunicipalityname.equals(municipality_name))
 					municipality_submunicipalityname = "";
-				actual_street = act_line_columns[3];
-				streetid = act_line_columns[8];
+				actual_street = act_line_columns[2];
+				//streetid = act_line_columns[8];
 
-				if(actual_street.indexOf("str.") != -1) {
-					actual_street = actual_street.replace("str.","strasse");
-					System.out.println("Info: changed Street name because of abbrev str. from ==="+act_line_columns[4]+"=== to ==="+actual_street+"===");
+				if(actual_street.indexOf(".") != -1) {
+					//actual_street = actual_street.replace("str.","strasse");
+					System.out.println("Info: please check street name with dot (.) ===" + actual_street + "===");
 				}
 				if(actual_street.indexOf("Str.") != -1) {
 					actual_street = actual_street.replace("Str.","Strasse");
@@ -268,12 +267,8 @@ municipality_submunicipalityname = "";
 
 				// After reading file complete: if streets still in buffer, import them now
 			if(strassenanzahl > 0) {
-				boolean stored = storeMunicipalityStreets(global_const_countryname, municipality_name, municipality_gemeindeschluessel, strassen, strassenid, strassenanzahl);
-				if(stored) {
-					municipality_count++;
-				} else {
-					System.out.println("ERROR ERROR: streets for municipality ===" + municipality_name + "=== could not be stored");
-				}
+				storeMunicipalityStreets(global_const_countryname, municipality_name, municipality_gemeindeschluessel, strassen, strassenid, streetsuburbs, strassenanzahl);
+				municipality_count++;
 		 	} // end of found streets when regionalkey changed: if(strassenanzahl > 0) {
 
 
@@ -309,14 +304,14 @@ municipality_submunicipalityname = "";
 		}
 
 		//global_const_countryname = "Bundesrepublik Deutschland";
-		global_const_countryname = "Neu-Meck-Vorp";
+		global_const_countryname = "Luxembourg";
 
 		try {
 				//Connection of own project-specific DB
 			String url_listofstreets = configuration.db_application_url;
 			con_listofstreets = DriverManager.getConnection(url_listofstreets, configuration.db_application_username, configuration.db_application_password);
 
-			String inputdateiname = "/home/openstreetmap/NASI/OSMshare/Projekte-Zusammenarbeiten/Straßenlisten-ab-2012-11/Deutschland/Mecklenburg-Vorpommmern-kpl/2016-02-09/Schluesselverz_LiegKat_MV_2015_12_10/Gemeinde_Strasse_Verwaltungsgemeinschaft_Kreis_MOD.csv";
+			String inputdateiname = "/home/openstreetmap/NASI/OSMshare/Projekte-Zusammenarbeiten/Straßenlisten-ab-2012-11/Luxembourg/20160227/all_mod.csv";
 
 			read_file(inputdateiname);
 
