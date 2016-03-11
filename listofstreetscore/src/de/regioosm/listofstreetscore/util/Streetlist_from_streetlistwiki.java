@@ -47,9 +47,15 @@ PROBLEM:
 				'invalidgeometry'		boundary is not a valid polygon
 
 */
+
 import java.io.*;
 import java.net.*;
 import java.text.*;
+import java.util.logging.ConsoleHandler;
+import java.util.logging.FileHandler;
+import java.util.logging.Handler;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.*;
@@ -86,6 +92,8 @@ public class Streetlist_from_streetlistwiki {
 	static Applicationconfiguration configuration = new Applicationconfiguration();
 
 	private TreeMap<String, String> wiki_namespaces = new TreeMap<String, String>();
+
+	public static final Logger logger = Logger.getLogger(Streetlist_from_streetlistwiki.class.getName());
 	
 	public Streetlist_from_streetlistwiki() {
 		wiki_namespaces.put("Brasil", "BR");
@@ -150,6 +158,21 @@ public class Streetlist_from_streetlistwiki {
 		InputStreamReader	isir;
 		String				active_url;
 		TreeMap<String, String> articles_gemeindeschluessel = new TreeMap<String, String>();
+		
+		try {
+
+			Handler handler = new ConsoleHandler();
+			handler.setLevel(configuration.logging_console_level);
+			logger.addHandler( handler );
+			FileHandler fhandler = new FileHandler(configuration.logging_filename);
+			fhandler.setLevel(configuration.logging_file_level);
+			logger.addHandler( fhandler );
+			logger.setLevel(configuration.logging_console_level);
+		} 
+		catch (IOException e) {
+			System.out.println("Fehler beim Logging-Handler erstellen, ...");
+			System.out.println(e.toString());
+		}
 		
 		this.municipality_country = "";
 		this.municipality_name = "";
@@ -232,7 +255,7 @@ public class Streetlist_from_streetlistwiki {
 				act_url_string = url_string;
 				if( ! request_continue_string.equals(""))
 					act_url_string += "&cmcontinue=" + request_continue_string;
-				System.out.println("act_url_string ==="+act_url_string+"===");
+				logger.log(Level.INFO, "act_url_string ==="+act_url_string+"===");
 				act_url = new URL(act_url_string);
 				urlConn = (HttpURLConnection) act_url.openConnection();
 				urlConn.setDoInput(true); 
@@ -249,13 +272,13 @@ public class Streetlist_from_streetlistwiki {
 				} 
 				dis.close();
 				urlConn.disconnect();
-				System.out.println("File Recentchanges length: "+recentchangescontent.length());
+				logger.log(Level.FINE, "File Recentchanges length: "+recentchangescontent.length());
 
 				DocumentBuilderFactory factory = null;
 				DocumentBuilder builder = null;
 				Document xml_document = null;
 
-				System.out.println("Info: got this xml-content from wiki api-call ==="+recentchangescontent.toString()+"===");
+				logger.log(Level.FINEST, "Info: got this xml-content from wiki api-call ==="+recentchangescontent.toString()+"===");
 
 				try {
 					factory = DocumentBuilderFactory.newInstance();
@@ -263,27 +286,33 @@ public class Streetlist_from_streetlistwiki {
 					// parse xml-document. got a few lines above as result from mapquest quickodbl api-call
 					xml_document = builder.parse(new InputSource(new StringReader(recentchangescontent.toString())));
 						// BEGIN temporary output of all response headerfield
-					System.out.println(".getXMLEncoding ==="+xml_document.getXmlEncoding()+"===");
-					System.out.println(".getTextContent ==="+xml_document.getTextContent()+"===");
-					System.out.println(".getInputEncoding ==="+xml_document.getInputEncoding() +"===");
-					System.out.println(".getXmlVersion==="+xml_document.getXmlVersion() +"===");
-					System.out.println(".getBaseURI==="+xml_document.getBaseURI() +"===");
-					System.out.println(".getDocumentURI==="+xml_document.getDocumentURI() +"===");
-					System.out.println(".getLocalName==="+xml_document.getLocalName() +"===");
-					System.out.println(".getNamespaceURI==="+xml_document.getNamespaceURI() +"===");
+					logger.log(Level.FINEST, ".getXMLEncoding ==="+xml_document.getXmlEncoding()+"===");
+					logger.log(Level.FINEST, ".getTextContent ==="+xml_document.getTextContent()+"===");
+					logger.log(Level.FINEST, ".getInputEncoding ==="+xml_document.getInputEncoding() +"===");
+					logger.log(Level.FINEST, ".getXmlVersion==="+xml_document.getXmlVersion() +"===");
+					logger.log(Level.FINEST, ".getBaseURI==="+xml_document.getBaseURI() +"===");
+					logger.log(Level.FINEST, ".getDocumentURI==="+xml_document.getDocumentURI() +"===");
+					logger.log(Level.FINEST, ".getLocalName==="+xml_document.getLocalName() +"===");
+					logger.log(Level.FINEST, ".getNamespaceURI==="+xml_document.getNamespaceURI() +"===");
 						// END temporary output of all response headerfield
 				} 
 				catch (org.xml.sax.SAXException saxerror) {
+					logger.log(Level.SEVERE, "ERROR: SAX-Exception during parsing of xml-content ==="+recentchangescontent.toString()+"===");
+					logger.log(Level.SEVERE, saxerror.toString());
 					System.out.println("ERROR: SAX-Exception during parsing of xml-content ==="+recentchangescontent.toString()+"===");
 					saxerror.printStackTrace();
 					throw new org.xml.sax.SAXException();
 				} 
 				catch (IOException ioerror) {
+					logger.log(Level.SEVERE, "ERROR: IO-Exception during parsing of xml-content ==="+recentchangescontent.toString()+"===");
+					logger.log(Level.SEVERE, ioerror.toString());
 					System.out.println("ERROR: IO-Exception during parsing of xml-content ==="+recentchangescontent.toString()+"===");
 					ioerror.printStackTrace();
 					return "";
 				}
 				catch (ParserConfigurationException parseerror) {
+					logger.log(Level.SEVERE, "ERROR: fail to get new Instance from DocumentBuilderFactory");
+					logger.log(Level.SEVERE, parseerror.toString());
 					System.out.println("ERROR: fail to get new Instance from DocumentBuilderFactory");
 					parseerror.printStackTrace();
 					return "";
@@ -307,13 +336,11 @@ public class Streetlist_from_streetlistwiki {
 				for (int i = 0; i < number_rc_objects; i++) {
 					Node rc_node = (Node) rc_objects.item(i);
 					NamedNodeMap rc_node_attrs = rc_node.getAttributes();  
-					//System.out.println(" rc-node  Attributes (Number: "+rc_node_attrs.getLength()+") are:");
 
 					String act_title = "";
 					String act_timestamp = default_wiki_timestamp;	// default time, if no time will be get from website request page
 					for(int attri = 0 ; attri<rc_node_attrs.getLength() ; attri++) {
 						Attr act_attribute = (Attr) rc_node_attrs.item(attri);
-						//System.out.println("* [" + act_attribute.getName()+"] ==="+act_attribute.getValue()+"===");
 						if(act_attribute.getName().equals("title")) {
 							act_title = act_attribute.getValue();
 						}
@@ -324,14 +351,12 @@ public class Streetlist_from_streetlistwiki {
 
 					if( 	(! act_title.equals("")) || 
 							(! act_timestamp.equals(""))) {
-						System.out.println("+ Titel ==="+act_title+"===      Timestamp ==="+act_timestamp+"===");
+						logger.log(Level.FINE, "+ Titel ==="+act_title+"===      Timestamp ==="+act_timestamp+"===");
 						if(	! municipalityname.equals("")) {
-
-							
 							if( ! act_title.equals(municipalityname)) {
-								System.out.println("Info: Title in recentchanges-List will be ignored, because title ==="+act_title+"=== doesnt fit to commandline -name value ==="+municipalityname+"===");
-if((wiki_namespaces.get(country) != null) && act_title.substring(0,2).equals(wiki_namespaces.get(country)))
-	System.out.println("correct country, but wrong title");
+								logger.log(Level.FINEST, "Info: Title in recentchanges-List will be ignored, because title ==="+act_title+"=== doesnt fit to commandline -name value ==="+municipalityname+"===");
+								if((wiki_namespaces.get(country) != null) && act_title.substring(0,2).equals(wiki_namespaces.get(country)))
+									logger.log(Level.FINEST, "correct country, but wrong title");
 								continue;
 							}
 						}
@@ -355,10 +380,10 @@ if((wiki_namespaces.get(country) != null) && act_title.substring(0,2).equals(wik
 					for (int i = 0; i < number_category_objects; i++) {
 						Node category_node = (Node) category_objects.item(i);
 						NamedNodeMap category_node_attrs = category_node.getAttributes();  
-						System.out.println(" category-node  Attributes (Number: "+category_node_attrs.getLength()+") are:");
+						logger.log(Level.FINEST, " category-node  Attributes (Number: "+category_node_attrs.getLength()+") are:");
 						for(int attri = 0 ; attri<category_node_attrs.getLength() ; attri++) {
 							Attr act_attribute = (Attr) category_node_attrs.item(attri);
-							System.out.println("* [" + act_attribute.getName()+"] ==="+act_attribute.getValue()+"===");
+							logger.log(Level.FINEST, "* [" + act_attribute.getName()+"] ==="+act_attribute.getValue()+"===");
 							if(act_attribute.getName().equals("cmcontinue")) {
 								request_continue_string = act_attribute.getValue();
 							}
@@ -367,10 +392,10 @@ if((wiki_namespaces.get(country) != null) && act_title.substring(0,2).equals(wik
 				}
 //ToDo sonst im recentchanges Fall Element beachten: <query-continue><recentchanges rcstart="2013-11-25T18:14:05Z"/></query-continue>
 				if(request_continue_string.equals("")) {
-					System.out.println("there wasn't a continue-attribut in response, so stop requests");
+					logger.log(Level.INFO, "there wasn't a continue-attribut in response, so stop requests");
 					break;
 				} else
-					System.out.println("found continue-string ==="+request_continue_string+"===");
+					logger.log(Level.INFO, "found continue-string ==="+request_continue_string+"===");
 
 
 			}	// end of loop over all url-request (more than once, if not all objects fitted in one request
@@ -382,13 +407,11 @@ if((wiki_namespaces.get(country) != null) && act_title.substring(0,2).equals(wik
 
 			for(Integer titelindex=0;titelindex<liste_anzahl;titelindex++) {
 
-				System.out.println("========================================================================================");
-				System.out.println("========================================================================================");
-				System.out.println("   Job #"+(titelindex+1)+"   =" + titelliste[titelindex] +"=  ...");
-				System.out.println("========================================================================================");
+				logger.log(Level.FINE, "========================================================================================");
+				logger.log(Level.FINE, "========================================================================================");
+				logger.log(Level.FINE, "   Job #"+(titelindex+1)+"   =" + titelliste[titelindex] +"=  ...");
+				logger.log(Level.FINE, "========================================================================================");
 
-
-				
 				if(	configuration.servername.equals("regio-osm.de") || 
 					configuration.servername.equals("nb11")) {
 					active_url = "http://regio-osm.de/listofstreets_wiki/index.php?title="+titelliste[titelindex].replace(" ","_");
@@ -398,14 +421,11 @@ if((wiki_namespaces.get(country) != null) && act_title.substring(0,2).equals(wik
 				if(this.maxlag > 0)
 					active_url += "&maxlag=" + this.maxlag;
 			  	url_streetlists = new URL(active_url +"&action=raw");
-				System.out.println("angefragte url ==="+url_streetlists+"===");	  
+			  	logger.log(Level.FINE, "request url ===" + url_streetlists + "===");
 				try {
 					urlConn_streetlists = (HttpURLConnection) url_streetlists.openConnection(); 
-					System.out.println("nach .openConnection");
 				    urlConn_streetlists.setDoInput(true); 
-					System.out.println("nach .setDoInput");
 				    urlConn_streetlists.setUseCaches(false);
-				    System.out.println("nach .setUseCaches");
 				    urlConn_streetlists.setRequestProperty("User-Agent", "OSM-Hausnummernauswertung Wikimodul (http:regio-osm.de/hausnummerauswertung)"); // Do as if you're using Firefox 3.6.3.
 				    urlConn_streetlists.setRequestProperty("Keep-Alive", "timeout=1, max=2");
 				    urlConn_streetlists.setRequestProperty("Connection", "Keep-Alive");
@@ -434,7 +454,10 @@ if((wiki_namespaces.get(country) != null) && act_title.substring(0,2).equals(wik
 						  	}
 						}
 					  	if(!country_found) {
+					  		logger.log(Level.SEVERE, "ERROR: unsupported Wiki namespace suffix ==="+namespace_prefix+"===");
 					  		System.out.println("ERROR: unsupported Wiki namespace suffix ==="+namespace_prefix+"===");
+							String local_messagetext = "ERROR: unsupported Wiki namespace suffix ==="+namespace_prefix+"===";
+							new LogMessage(LogMessage.CLASS_ERROR, "Streetlist_from_streetlistwiki", municipality_name, -1L, local_messagetext);									
 					  	}
 					  	municipality_name = titelliste[titelindex].substring(3);
 				  	}
@@ -445,15 +468,14 @@ if((wiki_namespaces.get(country) != null) && act_title.substring(0,2).equals(wik
 				  	Integer firstheadinglevel = 0;
 				  	Integer actheadinglevel = 0;
 
-					System.out.println("vor dis buffer def.");
 					boolean wikipage_ok = true;
 
 					isir = new InputStreamReader(urlConn_streetlists.getInputStream(),"UTF-8");
-					System.out.println("Encoding ist mit utf8angabe==="+isir.getEncoding()+"===");
+					logger.log(Level.FINEST, "Encoding ist mit utf8angabe==="+isir.getEncoding()+"===");
 						// BEGIN temporary output all html response header lines
 					Integer headeri = 0;
 					while(urlConn_streetlists.getHeaderField(headeri) != null) {
-						System.out.println("Headerfield #"+headeri+":  ["+urlConn_streetlists.getHeaderFieldKey(headeri)+"] ==="+urlConn_streetlists.getHeaderField(headeri)+"===");
+						logger.log(Level.FINEST, "Headerfield #"+headeri+":  ["+urlConn_streetlists.getHeaderFieldKey(headeri)+"] ==="+urlConn_streetlists.getHeaderField(headeri)+"===");
 
 							// if wiki-timestamp from actual muni hasn't set yet, 
 							// take now url respone headerfield [Last-modified], it contains really last wiki change timestamp
@@ -465,13 +487,15 @@ if((wiki_namespaces.get(country) != null) && act_title.substring(0,2).equals(wik
 							String local_server_source_timestring = "";
 							try {
 								local_server_source_timestring = urlConn_streetlists.getHeaderField(headeri);
-								System.out.println("original Server Respone timestamp ==="+local_server_source_timestring+"===");
+								logger.log(Level.FINEST, "original Server Respone timestamp ==="+local_server_source_timestring+"===");
 								java.util.Date local_server_time = time_formatter_weekday_mesz.parse(local_server_source_timestring);
 								String local_server_destination_timestring = time_formatter_iso8601.format(local_server_time);
-								System.out.println("destination Server Respone timestamp ==="+local_server_destination_timestring+"===");
+								logger.log(Level.FINEST, "destination Server Respone timestamp ==="+local_server_destination_timestring+"===");
 								timestampliste[titelindex] = local_server_destination_timestring;
 							}
 							catch (Exception e) {
+								logger.log(Level.SEVERE, "ERROR: failed to parse timestamp ==="+local_server_source_timestring+"===");
+								logger.log(Level.SEVERE, e.toString());
 								System.out.println("ERROR: failed to parse timestamp ==="+local_server_source_timestring+"===");
 								e.printStackTrace();
 								if(urlConn != null)
@@ -489,15 +513,16 @@ if((wiki_namespaces.get(country) != null) && act_title.substring(0,2).equals(wik
 							String local_contenttype = urlConn_streetlists.getHeaderField(headeri);
 							if(local_contenttype.indexOf("text/html") == 0) {	
 								Integer count_secs = 20; 
-								System.out.println("WARNING: got contenttype ==="+local_contenttype+"===   so wait now "+count_secs+" Seconds ...");
+								logger.log(Level.FINE, "WARNING: got contenttype ==="+local_contenttype+"===   so wait now "+count_secs+" Seconds ...");
 								waiting(count_secs);
-								System.out.println(" ok, wake up after sleep");
+								logger.log(Level.FINE, " ok, wake up after sleep");
 								wikipage_ok = false;
 							}						
 						}
 
 						headeri++;
 						if(headeri > 999) {
+							logger.log(Level.SEVERE,"Lost connection to streetlist wiki, it didn't responded after 999 tries.");
 							System.out.println("ERROR: stopped endless loop");
 							break;
 						}
@@ -511,7 +536,7 @@ if((wiki_namespaces.get(country) != null) && act_title.substring(0,2).equals(wik
 						}
 						dis.close();
 						isir.close();
-						System.out.println("didn't get wiki page correctly (html-page instead of wiki-format), so ignore actual wiki article, content ==="+complete_wikipage.toString()+"===");
+						logger.log(Level.WARNING, "didn't get wiki page correctly (html-page instead of wiki-format), so ignore actual wiki article, content ==="+complete_wikipage.toString()+"===");
 						continue;
 					}
 
@@ -523,7 +548,7 @@ if((wiki_namespaces.get(country) != null) && act_title.substring(0,2).equals(wik
 				dis = new BufferedReader(isir);
 				while ((inputline = dis.readLine()) != null) {
 					complete_wikipage.append(inputline + "\n");
-					System.out.println("zeile ==="+inputline+"===    bei zustand: "+zustand);
+					logger.log(Level.FINEST, "zeile ==="+inputline+"===    bei zustand: "+zustand);
 					if(inputline.equals("")) {
 						if(zustand.equals("listeaktiv") && (strassenanzahl > 0)) {
 							count_empty_lines_during_list++;
@@ -551,7 +576,7 @@ if((wiki_namespaces.get(country) != null) && act_title.substring(0,2).equals(wik
 				  			actheadinglevel++;
 				  			temp_line = temp_line.substring(1);
 				  		}
-				  		System.out.println("found heading-level ="+actheadinglevel+"=  line ==="+inputline+"===");
+				  		logger.log(Level.FINEST, "found heading-level ="+actheadinglevel+"=  line ==="+inputline+"===");
 					} else {
 						actheadinglevel = 0;
 					}
@@ -563,11 +588,11 @@ if((wiki_namespaces.get(country) != null) && act_title.substring(0,2).equals(wik
 						// then stop reading street-lines
 
 						if(strassenanzahl >= 1) {
-							System.out.println("jetzt bei actheadinglevel <= firstheadinglevel  Straßenanzahl >= 1, konkret: "+strassenanzahl);
-							System.out.println("             municipality_country ==="+municipality_country+"===");
-							System.out.println("                municipality_name ==="+municipality_name+"===");
-							System.out.println("  municipality_gemeindeschluessel ==="+municipality_gemeindeschluessel+"===");
-							System.out.println("      municipality_osmrelationid  ==="+municipality_osmrelationid+"===");
+							logger.log(Level.FINE, "jetzt bei actheadinglevel <= firstheadinglevel  Straßenanzahl >= 1, konkret: "+strassenanzahl);
+							logger.log(Level.FINE, "             municipality_country ==="+municipality_country+"===");
+							logger.log(Level.FINE, "                municipality_name ==="+municipality_name+"===");
+							logger.log(Level.FINE, "  municipality_gemeindeschluessel ==="+municipality_gemeindeschluessel+"===");
+							logger.log(Level.FINE, "      municipality_osmrelationid  ==="+municipality_osmrelationid+"===");
 							if(		country.equals("Bundesrepublik Deutschland")
 								&& (! municipality_gemeindeschluessel.equals("")) 
 								&& (municipality_gemeindeschluessel.length() == 8)) {
@@ -576,25 +601,25 @@ if((wiki_namespaces.get(country) != null) && act_title.substring(0,2).equals(wik
 									articles_gemeindeschluessel.put(municipality_gemeindeschluessel, municipality_name);
 								} else {
 									String local_messagetext = "identical regionalschluessel ==="+municipality_gemeindeschluessel+"=== at more than one artical, acutal article-titel ==="+municipality_name+"===, already found previously ==="+articles_gemeindeschluessel.get(municipality_gemeindeschluessel)+"===";
-									System.out.println(local_messagetext);
+									logger.log(Level.WARNING, local_messagetext);
 									new LogMessage(LogMessage.CLASS_ERROR, "Streetlist_from_streetlistwiki", municipality_name, -1L, local_messagetext);									
 									articles_gemeindeschluessel.put(municipality_gemeindeschluessel, articles_gemeindeschluessel.get(municipality_gemeindeschluessel)+"|"+municipality_name);
 								}
 								
-								System.out.println("checking muni ags ==="+municipality_gemeindeschluessel+"=== ...");
+								logger.log(Level.FINE, "checking muni ags ==="+municipality_gemeindeschluessel+"=== ...");
 								String local_municipalitynameunique = new GermanyOfficialkeys().get_unique_municipalityname(municipality_gemeindeschluessel);
 								if( !local_municipalitynameunique.equals(municipality_name)) {
-									System.out.println("checked-fail muni ags ==="+municipality_gemeindeschluessel+"===");
+									logger.log(Level.WARNING, "checked-fail muni ags ==="+municipality_gemeindeschluessel+"===");
 									String local_messagetext = "Wiki article has wrong title ==="+municipality_name+"=== instead of database version ==="+local_municipalitynameunique+"===. Article-URL is ==="+active_url+"===";
 									new LogMessage(LogMessage.CLASS_ERROR, "Streetlist_from_streetlistwiki", municipality_name, -1L, local_messagetext);
 								} else {
-									System.out.println("checked-ok muni ags ==="+municipality_gemeindeschluessel+"===");
+									logger.log(Level.FINE, "checked-ok muni ags ==="+municipality_gemeindeschluessel+"===");
 								}
 							} else {
-								System.out.println("NOT checked muni ags ==="+municipality_gemeindeschluessel+"===");
+								logger.log(Level.FINE, "NOT checked muni ags ==="+municipality_gemeindeschluessel+"===");
 							}
 							if(articlelist_destination.equals("methodoutput")) {
-								System.out.println("found streetlist will be send back to method-caller ...");
+								logger.log(Level.FINEST, "found streetlist will be send back to method-caller ...");
 								this.municipality_country = municipality_country;
 								this.municipality_name = municipality_name;
 								this.municipality_administrationid = municipality_gemeindeschluessel;
@@ -634,7 +659,7 @@ if((wiki_namespaces.get(country) != null) && act_title.substring(0,2).equals(wik
 							found_streets_in_loop = true;
 							zustand = "listenende";
 						} else {
-							System.out.println("ERROR: no streets found on page, when found another heading line ==="+inputline+"=== which has same or higher heading level than first one on page");
+							logger.log(Level.WARNING, "ERROR: no streets found on page, when found another heading line ==="+inputline+"=== which has same or higher heading level than first one on page");
 						}
 					}
 						// if active line contaings a heading
@@ -645,20 +670,20 @@ if((wiki_namespaces.get(country) != null) && act_title.substring(0,2).equals(wik
 						municipality_submunicipality_permanent = inputline.substring(inputline.indexOf(" ")+1);
 	
 						municipality_submunicipality_permanent = inputline;
-						System.out.println("Sub-Municipality found in a line, brutto original ==="+municipality_submunicipality_permanent+"===");
+						logger.log(Level.FINE, "Sub-Municipality found in a line, brutto original ==="+municipality_submunicipality_permanent+"===");
 						municipality_submunicipality_permanent = municipality_submunicipality_permanent.substring(municipality_submunicipality_permanent.indexOf(" ")+1);
 						if(municipality_submunicipality_permanent.indexOf(" =") != -1) {
 							municipality_submunicipality_permanent = municipality_submunicipality_permanent.substring(0,municipality_submunicipality_permanent.indexOf(" ="));
 						}
-						System.out.println("Sub-Municipality found in a linve, netto ==="+municipality_submunicipality_permanent+"===");
+						logger.log(Level.FINE, "Sub-Municipality found in a linve, netto ==="+municipality_submunicipality_permanent+"===");
 					}
 
 						// if active line contaings a special comment, take it as suburb / hamlet (old syntax from Florian Lohoff pages)
 					if(	inputline.indexOf("; Ortsteil") != -1) {
 						municipality_submunicipality_permanent = inputline.substring(0,inputline.indexOf("; Ortsteil")-1);
 						municipality_submunicipality_permanent = municipality_submunicipality_permanent.trim();
-						System.out.println("Sub-Municipality found in a line, brutto original ==="+inputline+"===");
-						System.out.println("Sub-Municipality found in a linve, netto ==="+municipality_submunicipality_permanent+"===");
+						logger.log(Level.FINE, "Sub-Municipality found in a line, brutto original ==="+inputline+"===");
+						logger.log(Level.FINE, "Sub-Municipality found in a linve, netto ==="+municipality_submunicipality_permanent+"===");
 					}
 						// if active line contaings a heading
 						// and is first heading on page
@@ -670,16 +695,17 @@ if((wiki_namespaces.get(country) != null) && act_title.substring(0,2).equals(wik
 						if(strassenanzahl >= 1) {
 							if(municipality_osmrelationid.equals("") && municipality_gemeindeschluessel.equals("")) {
 								String local_messagetext = "Wiki article has neither Gemeindeschluessel nor OSM-Relation-ID. Article-URL is ==="+active_url+"===";
+								logger.log(Level.WARNING, local_messagetext);
 								new LogMessage(LogMessage.CLASS_ERROR, "Streetlist_from_streetlistwiki", municipality_name, -1L, local_messagetext);
 							}
 
-							System.out.println("jetzt bei ansteigender Heading Straßenanzahl >= 1, konkret: "+strassenanzahl);
-							System.out.println("             municipality_country ==="+municipality_country+"===");
-							System.out.println("                municipality_name ==="+municipality_name+"===");
-							System.out.println("  municipality_gemeindeschluessel ==="+municipality_gemeindeschluessel+"===");
-							System.out.println("      municipality_osmrelationid  ==="+municipality_osmrelationid+"===");
+							logger.log(Level.FINE, "jetzt bei ansteigender Heading Straßenanzahl >= 1, konkret: "+strassenanzahl);
+							logger.log(Level.FINE, "             municipality_country ==="+municipality_country+"===");
+							logger.log(Level.FINE, "                municipality_name ==="+municipality_name+"===");
+							logger.log(Level.FINE, "  municipality_gemeindeschluessel ==="+municipality_gemeindeschluessel+"===");
+							logger.log(Level.FINE, "      municipality_osmrelationid  ==="+municipality_osmrelationid+"===");
 							if(articlelist_destination.equals("methodoutput")) {
-								System.out.println("found streetlist will be send back to method-caller ...");
+								logger.log(Level.FINE, "found streetlist will be send back to method-caller ...");
 								this.municipality_country = municipality_country;
 								this.municipality_name = municipality_name;
 								this.municipality_administrationid = municipality_gemeindeschluessel;
@@ -710,7 +736,7 @@ if((wiki_namespaces.get(country) != null) && act_title.substring(0,2).equals(wik
 							} else {
 								municipality_import.save(municipality_country, municipality_name, municipality_gemeindeschluessel, municipality_osmrelationid, strassen, streetsuburbs, strassenanzahl, active_url, "nein", "", "", "", timestampliste[titelindex]);
 							}
-				 			System.out.println("WARNING: alread read "+strassenanzahl+" Street lines, when found first time a heading-line ==="+inputline+"===");
+							logger.log(Level.WARNING, "WARNING: alread read "+strassenanzahl+" Street lines, when found first time a heading-line ==="+inputline+"===");
 							municipality_name = "";
 							municipality_osmrelationid = "";
 							strassenanzahl = 0;
@@ -736,27 +762,27 @@ if((wiki_namespaces.get(country) != null) && act_title.substring(0,2).equals(wik
 						inputline = inputline.replace("Land:","");
 						inputline = inputline.trim();
 						if( ! inputline.equals("")) {
-							System.out.println("Land ==="+inputline+"===");
+							logger.log(Level.FINE, "Land ==="+inputline+"===");
 							municipality_country = inputline;
 						}
 					}
 					if(inputline.indexOf("OSM-Relation:") == 0) {
 						inputline = inputline.replace("OSM-Relation:","");
 						inputline = inputline.trim();
-						System.out.println("Relatons-ID ==="+inputline+"===");
+						logger.log(Level.FINE, "Relatons-ID ==="+inputline+"===");
 						municipality_osmrelationid = inputline;
 					}
 					if(inputline.indexOf("Relation:") == 0) {
 						inputline = replace(inputline, "Relation: ","");
 						inputline = replace(inputline, "Relation:","");
-						System.out.println("Relatons-ID ==="+inputline+"===");
+						logger.log(Level.FINE, "Relatons-ID ==="+inputline+"===");
 						municipality_osmrelationid = inputline;
 					}
 					if(	(inputline.indexOf("Regionalschlüssel:") == 0) ||
 						(inputline.indexOf("Gemeindeschlüssel:") == 0)) {
 						inputline = inputline.substring(inputline.indexOf(":")+1);
 						inputline = inputline.trim();
-						System.out.println("Regionalschlüssel am Anfang ==="+inputline+"===");
+						logger.log(Level.FINE, "Regionalschlüssel am Anfang ==="+inputline+"===");
 
 						Matcher match = wildcard_pattern.matcher(inputline);
 						StringBuffer sb = new StringBuffer();
@@ -773,14 +799,14 @@ if((wiki_namespaces.get(country) != null) && act_title.substring(0,2).equals(wik
 						}
 						inputline = sb.toString();
 
-						System.out.println("Regionalschlüssel am Ende ==="+inputline+"===");
+						logger.log(Level.FINE, "Regionalschlüssel am Ende ==="+inputline+"===");
 						municipality_gemeindeschluessel = inputline;
 					}
 					if(inputline.indexOf("Land = ") != -1) {
 						inputline = inputline.substring(inputline.indexOf("=")+1);
 						inputline = inputline.trim();
 						if( ! inputline.equals("")) {
-							System.out.println("Land ==="+inputline+"===");
+							logger.log(Level.FINE, "Land ==="+inputline+"===");
 							municipality_country = inputline;
 						}
 					}
@@ -788,7 +814,7 @@ if((wiki_namespaces.get(country) != null) && act_title.substring(0,2).equals(wik
 						(inputline.indexOf("Gemeindeschlüssel = ") != -1)) {
 						inputline = inputline.substring(inputline.indexOf("=")+2);
 						inputline = inputline.trim();
-						System.out.println("Regionalschlüssel am Anfang ==="+inputline+"===");
+						logger.log(Level.FINE, "Regionalschlüssel am Anfang ==="+inputline+"===");
 
 						Matcher match = wildcard_pattern.matcher(inputline);
 						StringBuffer sb = new StringBuffer();
@@ -804,31 +830,31 @@ if((wiki_namespaces.get(country) != null) && act_title.substring(0,2).equals(wik
 							inputline = sb.toString();
 						}
 
-						System.out.println("Regionalschlüssel am Ende ==="+inputline+"===");
+						logger.log(Level.FINE, "Regionalschlüssel am Ende ==="+inputline+"===");
 						municipality_gemeindeschluessel = inputline;
 					}
 					if(	(inputline.indexOf("OSM-Relation = ") != -1) ||
 						(inputline.indexOf("OSM Relation = ") != -1)) {
 						inputline = inputline.substring(inputline.indexOf("=")+2);
 						inputline = inputline.trim();
-						System.out.println("OSM-Relation-ID ==="+inputline+"===");
+						logger.log(Level.FINE, "OSM-Relation-ID ==="+inputline+"===");
 					  	municipality_osmrelationid = inputline;
 					}
 					if(	(inputline.indexOf("List:") == 0) ||
 							(inputline.indexOf("Liste:") == 0) ||
 							(inputline.indexOf("= Liste =") != -1)) {
-						System.out.println("Listenstart gefunden ==="+inputline+"===");
+						logger.log(Level.FINE, "Listenstart gefunden ==="+inputline+"===");
 						zustand = "listeaktiv";
 					}
 					if(	((inputline.indexOf("* ") == 0) || (inputline.indexOf("*\t") == 0)) && zustand.equals("listeaktiv")) {
 						String local_street = inputline.substring(2);
 						if(local_street.indexOf(";") != -1) {
 							local_street = local_street.substring(0,local_street.indexOf(";"));
-							System.out.println("local_street reduziert um gefundenen Kommentar, dann ==="+local_street+"===");
+							logger.log(Level.FINE, "local_street reduziert um gefundenen Kommentar, dann ==="+local_street+"===");
 						}
 						while((local_street.length() >= 1) && (local_street.substring(local_street.length() - 1).equals(" "))) {
 							local_street = local_street.substring(0,local_street.length() - 1);
-				      	System.out.println("local_street nach leerzeichen am Ende entfernt ==="+local_street+"===");
+							logger.log(Level.FINE, "local_street nach leerzeichen am Ende entfernt ==="+local_street+"===");
 						}
 
 						municipality_submunicipality = "";
@@ -836,14 +862,14 @@ if((wiki_namespaces.get(country) != null) && act_title.substring(0,2).equals(wik
 						int klammer_bis = local_street.indexOf(")");
 						if((klammer_ab != -1) && (klammer_bis != -1)) {
 							municipality_submunicipality = local_street.substring(klammer_ab + 1, klammer_bis);
-							System.out.println("gefundener Ortsteil ==="+municipality_submunicipality+"===");
+							logger.log(Level.FINE, "gefundener Ortsteil ==="+municipality_submunicipality+"===");
 
 							local_street = local_street.substring(0,klammer_ab);
 							while((local_street.length() >= 1) && (local_street.substring(local_street.length() - 1).equals(" "))) {
 								local_street = local_street.substring(0,local_street.length() - 1);
-								System.out.println("local_street reduziert und nach leerzeichen am Ende entfernt ==="+local_street+"===");
+								logger.log(Level.FINE, "local_street reduziert und nach leerzeichen am Ende entfernt ==="+local_street+"===");
 							}
-							System.out.println("local_street jetzt ohne Ortszusatz ==="+local_street+"===");
+							logger.log(Level.FINE, "local_street jetzt ohne Ortszusatz ==="+local_street+"===");
 
 							if(municipality_submunicipality.substring(0,1).equals("\""))
 								municipality_submunicipality = municipality_submunicipality.substring(1);
@@ -853,7 +879,7 @@ if((wiki_namespaces.get(country) != null) && act_title.substring(0,2).equals(wik
 								municipality_submunicipality = municipality_submunicipality.substring(1);
 							while((municipality_submunicipality.length() > 0) && (municipality_submunicipality.substring(municipality_submunicipality.length()-1,municipality_submunicipality.length()).equals(" ")))
 								municipality_submunicipality = municipality_submunicipality.substring(0,municipality_submunicipality.length()-1);
-							System.out.println("Municipality submunicipality netto ==="+municipality_submunicipality+"===");
+							logger.log(Level.FINE, "Municipality submunicipality netto ==="+municipality_submunicipality+"===");
 		
 							if(municipality_submunicipality.equals(municipality_name))
 								municipality_submunicipality = "";
@@ -873,24 +899,24 @@ if((wiki_namespaces.get(country) != null) && act_title.substring(0,2).equals(wik
 						strassen[strassenanzahl] = local_street;
 						streetsuburbs[strassenanzahl] = municipality_submunicipality;
 						strassenanzahl++;
-						System.out.println("aktuelle Straße==="+local_street+"===  Ortszusatz ==="+municipality_submunicipality+"===");
+						logger.log(Level.FINE, "aktuelle Straße==="+local_street+"===  Ortszusatz ==="+municipality_submunicipality+"===");
 					}
 				} 
 				dis.close();
 				isir.close();
 
-				System.out.println("restliche Anzahl Straßen nach lesen aller Zeilen: "+strassenanzahl);
+				logger.log(Level.INFO, "restliche Anzahl Straßen nach lesen aller Zeilen: "+strassenanzahl);
 
 				if(strassenanzahl >= 1) {
 					if(municipality_osmrelationid.equals("") && municipality_gemeindeschluessel.equals("")) {
 						String local_messagetext = "Wiki article has neither Gemeindeschluessel nor OSM-Relation-ID. Article-URL is ==="+active_url+"===";
 						new LogMessage(LogMessage.CLASS_ERROR, "Streetlist_from_streetlistwiki", municipality_name, -1L, local_messagetext);
 					}
-					System.out.println("jetzt am Ende Straßenanzahl >= 1, konkret: "+strassenanzahl);
-					System.out.println("                municipality_country ==="+municipality_country+"===");
-					System.out.println("                municipality_name ==="+municipality_name+"===");
-					System.out.println("  municipality_gemeindeschluessel ==="+municipality_gemeindeschluessel+"===");
-					System.out.println("      municipality_osmrelationid  ==="+municipality_osmrelationid+"===");
+					logger.log(Level.FINE, "jetzt am Ende Straßenanzahl >= 1, konkret: "+strassenanzahl);
+					logger.log(Level.FINE, "                municipality_country ==="+municipality_country+"===");
+					logger.log(Level.FINE, "                municipality_name ==="+municipality_name+"===");
+					logger.log(Level.FINE, "  municipality_gemeindeschluessel ==="+municipality_gemeindeschluessel+"===");
+					logger.log(Level.FINE, "      municipality_osmrelationid  ==="+municipality_osmrelationid+"===");
 					if((! municipality_gemeindeschluessel.equals("")) && (municipality_gemeindeschluessel.length() == 8)) {
 							// check and add found gemeindeschluessel in Map. If already existing, report Error in Wiki
 						if(articles_gemeindeschluessel.get(municipality_gemeindeschluessel) == null) {
@@ -902,20 +928,21 @@ if((wiki_namespaces.get(country) != null) && act_title.substring(0,2).equals(wik
 							articles_gemeindeschluessel.put(municipality_gemeindeschluessel, articles_gemeindeschluessel.get(municipality_gemeindeschluessel)+"|"+municipality_name);
 						}
 
-						System.out.println("checking muni ags ==="+municipality_gemeindeschluessel+"=== ...");
+						logger.log(Level.FINE, "checking muni ags ==="+municipality_gemeindeschluessel+"=== ...");
 						String local_municipalitynameunique = new GermanyOfficialkeys().get_unique_municipalityname(municipality_gemeindeschluessel);
 						if( !local_municipalitynameunique.equals(municipality_name)) {
 							System.out.println("checked-fail muni ags ==="+municipality_gemeindeschluessel+"===");
 							String local_messagetext = "Wiki article has wrong title ==="+municipality_name+"=== instead of database version ==="+local_municipalitynameunique+"===. Article-URL is ==="+active_url+"===";
+							logger.log(Level.WARNING, local_messagetext);
 							new LogMessage(LogMessage.CLASS_ERROR, "Streetlist_from_streetlistwiki", municipality_name, -1L, local_messagetext);
 						} else {
-							System.out.println("checked-ok muni ags ==="+municipality_gemeindeschluessel+"===");
+							logger.log(Level.FINE, "checked-ok muni ags ==="+municipality_gemeindeschluessel+"===");
 						}
 					} else {
-						System.out.println("NOT checked muni ags ==="+municipality_gemeindeschluessel+"===");
+						logger.log(Level.FINE, "NOT checked muni ags ==="+municipality_gemeindeschluessel+"===");
 					}
 					if(articlelist_destination.equals("methodoutput")) {
-						System.out.println("found streetlist will be send back to method-caller ...");
+						logger.log(Level.FINE, "found streetlist will be send back to method-caller ...");
 						this.municipality_country = municipality_country;
 						this.municipality_name = municipality_name;
 						this.municipality_administrationid = municipality_gemeindeschluessel;
@@ -965,32 +992,36 @@ if((wiki_namespaces.get(country) != null) && act_title.substring(0,2).equals(wik
 
 				
 				} catch (FileNotFoundException fileerror) {
-					System.out.println("Wiki-Page not found, ignoring url ==="+active_url+"=== details follows ...");
-					System.out.println(fileerror.toString());
+					logger.log(Level.SEVERE, "Wiki-Page not found, ignoring url ==="+active_url+"=== details follows ...");
+					logger.log(Level.SEVERE, fileerror.toString());
 					continue;
 				}
 				catch (IOException ioe) {
+					logger.log(Level.SEVERE, "ERROR: fehler aufgetreten beim holen eines Dokuments über http");
+					logger.log(Level.SEVERE, ioe.toString());
 					System.out.println("ERROR: fehler aufgetreten beim holen eines Dokuments über http");
 					ioe.printStackTrace();
 					continue;
 				} 
-				System.out.println("nach dis buffer def.");
-
-
-				
 				
 			} // end of loop over all wiki street pages
 
 			java.util.Date time_program_endedtime = new java.util.Date();
+			logger.log(Level.INFO, "Program: Ended Time: "+time_formatter.format(time_program_endedtime));
+			logger.log(Level.INFO, "Program: Duration in ms: "+(time_program_endedtime.getTime()-time_program_startedtime.getTime())/1000);
 			System.out.println("Program: Ended Time: "+time_formatter.format(time_program_endedtime));
 			System.out.println("Program: Duration in ms: "+(time_program_endedtime.getTime()-time_program_startedtime.getTime())/1000);
 
 		} catch (MalformedURLException mue) {
+			logger.log(Level.SEVERE, "Error due to getting recentchanges api-request (malformedurlexception). url was ==="+act_url_string+"===");
+			logger.log(Level.SEVERE, "Details: " + mue.toString());
 			System.out.println("Error due to getting recentchanges api-request (malformedurlexception). url was ==="+act_url_string+"===");					
 			System.out.println("Details: " + mue.toString());
 			mue.printStackTrace();
 			return "";
 		} catch (IOException ioe) {
+			logger.log(Level.SEVERE, "Error due to getting recentchanges api-request (ioexception). url was ==="+act_url_string+"===");
+			logger.log(Level.SEVERE, "Details: " + ioe.toString());
 			System.out.println("Error due to getting recentchanges api-request (ioexception). url was ==="+act_url_string+"===");
 			System.out.println("Details: " + ioe.toString());
 			ioe.printStackTrace();
@@ -998,21 +1029,4 @@ if((wiki_namespaces.get(country) != null) && act_title.substring(0,2).equals(wik
 		}
 		return "";
 	}
-
-	public static void main(String[] args) {
-		System.out.println("WARNING: main of Streetlist_from_streetlistwiki ist just for testing purposes,   CANCEL EXECUTION NOW");
-		try {
-			Streetlist_from_streetlistwiki otto = new Streetlist_from_streetlistwiki();
-			for(Integer xi=0; xi<1000; xi++ ) {
-				System.out.println("Vor Aufruf #" + xi);
-				String dummy = otto.read ("recentchanges", "Böblingen", "Bundesrepublik Deutschland", "methodoutput");
-				System.out.println("Nach Aufruf #" + xi);
-			}
-		} catch(Exception e) {
-			System.out.println("SHTI, Excepstion ...");
-			System.out.println(e.toString());
-		}
-	}
-	
 }
-	

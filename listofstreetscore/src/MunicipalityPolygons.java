@@ -19,6 +19,7 @@ import java.util.logging.FileHandler;
 import java.util.logging.Handler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.logging.SimpleFormatter;
 
 import javax.xml.parsers.*;
 
@@ -196,9 +197,9 @@ public class MunicipalityPolygons {
 
 
 		String selectbefehl_geometrie_bbox = "SELECT ST_XMin(ST_GeomFromText(ST_AsText(?))) as xmin,";
-		selectbefehl_geometrie_bbox += " ST_YMin(ST_GeomFromText(ST_AsTExt(?))) as ymin,";
-		selectbefehl_geometrie_bbox += " ST_XMax(ST_GeomFromText(ST_AsTExt(?))) as xmax,";
-		selectbefehl_geometrie_bbox += " ST_YMax(ST_GeomFromText(ST_AsTExt(?))) as ymax;";
+		selectbefehl_geometrie_bbox += " ST_YMin(ST_GeomFromText(ST_AsText(?))) as ymin,";
+		selectbefehl_geometrie_bbox += " ST_XMax(ST_GeomFromText(ST_AsText(?))) as xmax,";
+		selectbefehl_geometrie_bbox += " ST_YMax(ST_GeomFromText(ST_AsText(?))) as ymax;";
 		log.log(Level.FINE, "selectbefehl_geometrie_bbox==="+selectbefehl_geometrie_bbox+"===");
 	
 
@@ -212,7 +213,8 @@ public class MunicipalityPolygons {
 			if( rs_geometrie_bbox.next() ) {
 				log.log(Level.FINE, "ok, Polygon BBOX als xmin ==="+rs_geometrie_bbox.getString(1)+"===    ymin ==="+rs_geometrie_bbox.getString(2)+"===");
 				log.log(Level.FINE, "                     xmax ==="+rs_geometrie_bbox.getString(3)+"===    ymax ==="+rs_geometrie_bbox.getString(4)+"===");
-				String nominatim_search_url = "http://open.mapquestapi.com/nominatim/v1/search/";
+				//String nominatim_search_url = "http://open.mapquestapi.com/nominatim/v1/search/";
+				String nominatim_search_url = "https://nominatim.openstreetmap.org/search/";
 
 				//nominatim_search_url += objectname;
 				try {
@@ -380,11 +382,10 @@ public class MunicipalityPolygons {
 
 
 					String selectbefehl_point_is_in_geometrie = "SELECT ST_Contains(?,"
-						+ " ST_Transform(ST_PointFromText('POINT(?, ?)',4326),900913)"+") AS point_contains";
+						+ " ST_Transform(ST_PointFromText(?, 4326), 900913)"+") AS point_contains";
 					PreparedStatement stmt_point_is_in_geometry = con_listofstreets.prepareStatement(selectbefehl_point_is_in_geometrie);
 					stmt_point_is_in_geometry.setString(1, geometry_binary);
-					stmt_point_is_in_geometry.setString(2, attrs.getNamedItem("lon").getNodeValue());
-					stmt_point_is_in_geometry.setString(3, attrs.getNamedItem("lat").getNodeValue());
+					stmt_point_is_in_geometry.setString(2, "Point(" + attrs.getNamedItem("lon").getNodeValue() + ", " + attrs.getNamedItem("lat").getNodeValue() + ")");
 					ResultSet rs_point_is_in_geometry = stmt_point_is_in_geometry.executeQuery();
 					if( rs_point_is_in_geometry.next() ) {
 						log.log(Level.FINE, " resultset ergebnis ==="+rs_point_is_in_geometry.getString("point_contains")+"===");
@@ -441,8 +442,10 @@ public class MunicipalityPolygons {
 			Handler handler = new ConsoleHandler();
 			handler.setLevel(configuration.logging_console_level);
 			log.addHandler( handler );
+			SimpleFormatter simpleformatter = new SimpleFormatter();
 			FileHandler fhandler = new FileHandler(configuration.logging_filename);
 			fhandler.setLevel(configuration.logging_file_level);
+			fhandler.setFormatter(simpleformatter);
 			log.addHandler( fhandler );
 			log.setLevel(configuration.logging_console_level);
 		} 
@@ -634,7 +637,11 @@ selectbefehl_municipalities += " AND country NOT like 'Neu-Meck-Vorp%'";
 				count_municipalities++;
 
 				log.log(Level.FINE, "========================================================================================");
-				log.log(Level.FINE, "\nBEGINN Verarbeitung lfd.-Nr. "+count_municipalities+", municapility id: "+rs_municipalities.getLong("id")+",  Gemeindeschlüssel ==="+rs_municipalities.getString("officialkeys_id")+"=== mit Relations-ID # "+rs_municipalities.getString("osm_relation_id")+"   Name ==="+rs_municipalities.getString("name")+"===    gemeindeschlÃ¼ssel ==="+rs_municipalities.getString("officialkeys_id")+"===");
+				log.log(Level.FINE, "\nBEGIN Processing No. " + count_municipalities + ","
+					+ " municapility id: " + rs_municipalities.getLong("id") + ","
+					+ " official reference ===" + rs_municipalities.getString("officialkeys_id") + "===" 
+					+ " OSM Relation ID # " + rs_municipalities.getString("osm_relation_id") + ","
+					+ " Municipality ===" + rs_municipalities.getString("name"));
 				log.log(Level.FINE, "----------------------------------------------------------------------------------------");
 
 				if(	(rs_municipalities.getString("osm_relation_id") != null) &&
@@ -661,23 +668,23 @@ selectbefehl_municipalities += " AND country NOT like 'Neu-Meck-Vorp%'";
 
 				String local_adminid1 = "";
 				String local_adminid2 = "";
-				if(		((rs_municipalities.getString("relation_officialkey_key") != null) && 
-							( ! rs_municipalities.getString("relation_officialkey_key").equals("")))
-					&&	((rs_municipalities.getString("officialkeys_id") != null) && 
-							( ! rs_municipalities.getString("officialkeys_id").equals("")))
+				if(		((rs_municipalities.getString("relation_officialkey_key") != null) 
+					&&	(! rs_municipalities.getString("relation_officialkey_key").equals("")))
+					&&	((rs_municipalities.getString("officialkeys_id") != null) 
+					&&	(! rs_municipalities.getString("officialkeys_id").equals("")))
 					) {
-					selectbefehl_relation += " WHERE (tags @> '? => ?'";
+					selectbefehl_relation += " WHERE tags @> hstore(?, ?)";
 						// only in Germany: some variants of AGS without suffix 0
 					if(rs_municipalities.getString("relation_officialkey_key").equals("de:amtlicher_gemeindeschluessel")) {
 						local_adminid1 = rs_municipalities.getString("officialkeys_id");
 						while(( local_adminid1.length() >= 1) && (local_adminid1.substring(local_adminid1.length()-1,local_adminid1.length()).equals("0")))
 							local_adminid1 = local_adminid1.substring(0,local_adminid1.length()-1);
 						if( ! rs_municipalities.getString("officialkeys_id").equals(local_adminid1))
-							selectbefehl_relation += "OR (tags @> 'de:amtlicher_gemeindeschluessel => ?') ";
+							selectbefehl_relation += " OR tags @> hstore('de:amtlicher_gemeindeschluessel', ?)";
 							// Variant with some spacens "03 1 52 012" (for example Göttingen)
 						local_adminid2 = rs_municipalities.getString("officialkeys_id");
 						local_adminid2 = local_adminid2.substring(0,2) + " " + local_adminid2.substring(2,3) + " " + local_adminid2.substring(3,5) + " " + local_adminid2.substring(5);
-						selectbefehl_relation += "OR (tags @> 'de:amtlicher_gemeindeschluessel => ?') ";
+						selectbefehl_relation += " OR tags @> hstore('de:amtlicher_gemeindeschluessel', ?)";
 					}
 				} else if(		(rs_municipalities.getString("osm_relation_id") != null)
 							&&	(!rs_municipalities.getString("osm_relation_id").equals(""))) {
@@ -692,25 +699,34 @@ selectbefehl_municipalities += " AND country NOT like 'Neu-Meck-Vorp%'";
 
 				PreparedStatement stmt_relation = con_mapnik.prepareStatement(selectbefehl_relation);
 				statementIndex = 1;
+				String stmt_relationparameters = "";
 				stmt_relation.setString(statementIndex++, rs_municipalities.getString("relation_officialkey_key"));
-				if(		((rs_municipalities.getString("relation_officialkey_key") != null)
-					&&	( ! rs_municipalities.getString("relation_officialkey_key").equals("")))
-					&&	((rs_municipalities.getString("officialkeys_id") != null)
-					&&	( ! rs_municipalities.getString("officialkeys_id").equals("")))) {
+				if(		((rs_municipalities.getString("relation_officialkey_key") != null) 
+						&&	(! rs_municipalities.getString("relation_officialkey_key").equals("")))
+						&&	((rs_municipalities.getString("officialkeys_id") != null) 
+						&&	(! rs_municipalities.getString("officialkeys_id").equals("")))
+						) {
 					stmt_relation.setString(statementIndex++, rs_municipalities.getString("relation_officialkey_key"));
+					stmt_relationparameters += "[" + (statementIndex - 1) + "] ===" + rs_municipalities.getString("relation_officialkey_key") + "===";
+					stmt_relation.setString(statementIndex++, rs_municipalities.getString("officialkeys_id"));
+					stmt_relationparameters += "[" + (statementIndex - 1) + "] ===" + rs_municipalities.getString("officialkeys_id");
 					if(		rs_municipalities.getString("relation_officialkey_key").equals("de:amtlicher_gemeindeschluessel")) {
 						if(!rs_municipalities.getString("officialkeys_id").equals(local_adminid1)) {
 							stmt_relation.setString(statementIndex++, local_adminid1);
+							stmt_relationparameters += "[" + (statementIndex - 1) + "] ===" + local_adminid1;
 						}
 						stmt_relation.setString(statementIndex++, local_adminid2);
+						stmt_relationparameters += "[" + (statementIndex - 1) + "] ===" + local_adminid2;
 					}
 				} else if(		(rs_municipalities.getString("osm_relation_id") != null)
 						&&	(!rs_municipalities.getString("osm_relation_id").equals(""))) {
 					stmt_relation.setLong(statementIndex++, rs_municipalities.getLong("osm_relation_id"));
+					stmt_relationparameters += "[" + (statementIndex - 1) + "] ===" + rs_municipalities.getLong("osm_relation_id");
 				}
 				
 
-				log.log(Level.FINE, "Ausgabe selectbefehl_relation ===" + selectbefehl_relation.toString() + "===");
+				log.log(Level.FINE, "stmt_relation, prepared parameters ===" + stmt_relationparameters + "===");
+				log.log(Level.FINEST, "selectbefehl_relation ===" + selectbefehl_relation + "===");
 				ResultSet rs_relation = stmt_relation.executeQuery();
 				Integer count_relations = 0;
 				Integer count_correct_relations = 0;
@@ -725,10 +741,10 @@ selectbefehl_municipalities += " AND country NOT like 'Neu-Meck-Vorp%'";
 					count_relations++;
 					log.log(Level.FINE, "Relation #"+count_relations+":  id==="+rs_relation.getString("id")+"===  name ==="+rs_relation.getString("name")+"===   gemeindeschluessel ==="+rs_relation.getString("gemeindeschluessel")+"===  boundary ==="+rs_relation.getString("boundary")+"===");
 					if((rs_relation.getString("boundary") == null) || ( ! rs_relation.getString("boundary").equals("administrative"))) {
-						System.out.print("Warning: Relation-ID is invalid. It's not boundary=administrative, but ");
+						log.log(Level.WARNING, "Warning: Relation-ID is invalid. It's not boundary=administrative, but ");
 						if(rs_relation.getString("boundary") == null) {
 							relation_wrong = "error-relation-no-boundary-tag";
-							log.log(Level.FINE, "is missing");
+							log.log(Level.WARNING, "is missing");
 							String local_messagetext = "Relation with osm-id "+rs_relation.getString("id")+" has no Tag 'boundary' and will be ignored";
 							new LogMessage(LogMessage.CLASS_WARNING, "create_municipality_polygons", rs_municipalities.getString("name"), rs_municipalities.getLong("id"), local_messagetext);
 						} else {
@@ -966,16 +982,16 @@ selectbefehl_municipalities += " AND country NOT like 'Neu-Meck-Vorp%'";
 						log.log(Level.WARNING, "Warning: got more than one relation with relation id ==="+rs_municipalities.getString("osm_relation_id")+"=== Select statement was ==="+selectbefehl_relation+"===");
 
 
-						String temp_create_multipolygon_sql = "SELECT ST_AsText(?) as completepoly, ST_AsText(?) as polypart;";
-						log.log(Level.FINE, "temp_create_multipolygon_sql==="+temp_create_multipolygon_sql+"===");
+						String temp_create_multipolygon_sql = "SELECT ST_AsText(?::geometry) as completepoly, ST_AsText(?::geometry) as polypart;";
+						log.log(Level.FINEST, "temp_create_multipolygon_sql==="+temp_create_multipolygon_sql+"===");
 						try {
 							PreparedStatement temp_stmt_create_multipolygon = con_listofstreets.prepareStatement(temp_create_multipolygon_sql);
 							temp_stmt_create_multipolygon.setString(1, complete_polygon);
-							temp_stmt_create_multipolygon.setString(1, actual_polygon_part);
-							ResultSet temp_rs_create_multipolygon = temp_stmt_create_multipolygon.executeQuery(  );
+							temp_stmt_create_multipolygon.setString(2, actual_polygon_part);
+							ResultSet temp_rs_create_multipolygon = temp_stmt_create_multipolygon.executeQuery();
 							if( temp_rs_create_multipolygon.next() ) {
-								log.log(Level.FINE, "ok, completepoly ==="+temp_rs_create_multipolygon.getString("completepoly")+"===");
-								log.log(Level.FINE, "ok, polypart ==="+temp_rs_create_multipolygon.getString("polypart")+"===");
+								log.log(Level.FINEST, "ok, completepoly ==="+temp_rs_create_multipolygon.getString("completepoly")+"===");
+								log.log(Level.FINEST, "ok, polypart ==="+temp_rs_create_multipolygon.getString("polypart")+"===");
 							}
 						}	// ende try DB-connect
 						catch( SQLException e) {
@@ -991,15 +1007,15 @@ selectbefehl_municipalities += " AND country NOT like 'Neu-Meck-Vorp%'";
 
 
 						//production String create_multipolygon_sql = "SELECT ST_Union('"+complete_polygon+"','"+actual_polygon_part+"') as unionpolygon, ";
-						String create_multipolygon_sql = "SELECT ST_Union(?, ?) as unionpolygon, ";
-						create_multipolygon_sql += "ST_AsText(ST_Union(?, ?)) as justfordebug_unionpolygon_astext;";
+						String create_multipolygon_sql = "SELECT ST_Union(?::geometry, ?::geometry) as unionpolygon, ";
+						create_multipolygon_sql += "ST_AsText(ST_Union(?::geometry, ?::geometry)) as justfordebug_unionpolygon_astext;";
 						try {
 							PreparedStatement stmt_create_multipolygon = con_listofstreets.prepareStatement(create_multipolygon_sql);
 							stmt_create_multipolygon.setString(1, actual_polygon_part);
 							stmt_create_multipolygon.setString(2, complete_polygon);
 							stmt_create_multipolygon.setString(3, complete_polygon);
 							stmt_create_multipolygon.setString(4, actual_polygon_part);
-							log.log(Level.FINE, "create_multipolygon_sql===" + stmt_create_multipolygon.toString() + "===");
+							log.log(Level.FINEST, "create_multipolygon_sql===" + stmt_create_multipolygon + "===");
 							ResultSet rs_create_multipolygon = stmt_create_multipolygon.executeQuery();
 							if( rs_create_multipolygon.next() ) {
 								boolean relationsidsvorhanden = false;
@@ -1013,7 +1029,7 @@ selectbefehl_municipalities += " AND country NOT like 'Neu-Meck-Vorp%'";
 								if(!relationsidsvorhanden) {
 									complete_polygon_idlist += "," + rs_relation.getString("id");	// add actual polygon osm-id to list of all unioned-polygons
 								}
-								log.log(Level.FINE, "ok, union polygon ==="+rs_create_multipolygon.getString("justfordebug_unionpolygon_astext")+"===");
+								log.log(Level.FINEST, "ok, union polygon ==="+rs_create_multipolygon.getString("justfordebug_unionpolygon_astext")+"===");
 								complete_polygon = rs_create_multipolygon.getString("unionpolygon");
 							}
 						}	// ende try DB-connect
@@ -1076,7 +1092,7 @@ selectbefehl_municipalities += " AND country NOT like 'Neu-Meck-Vorp%'";
 
 
 
-					// Prio 1: get hierarchy from admin polygons around the municipality
+					// Priority 1: get hierarchy from admin polygons around the municipality
 				if( hierarchy_topdown.equals("")) {
 	
 					Date time_last_step = null;
@@ -1102,20 +1118,14 @@ selectbefehl_municipalities += " AND country NOT like 'Neu-Meck-Vorp%'";
 				time_hierarchyaction_endedtime = new Date();
 				log.log(Level.FINEST, "Time: time for getting polygon-hierarchy in ms: "+(time_hierarchyaction_endedtime.getTime()-time_hierarchyaction_startedtime.getTime()));
 				time_hierarchyaction_startedtime = new Date();
-				
-				
-				
-				
+
+
 				String sqlbefehl_places = "";
-				
 
-				
-				
-				
-					// Prio 2: get hierarchy from place nodes with correct municipality id
 
+					// Priority 2: get hierarchy from place nodes with correct municipality id
 				if( hierarchy_topdown.equals("")) {
-						// get osm place-object (of type node) for getting administration hierarchy - first try with german gemeindeschluessel, if available
+						// get OSM place-object (of type node) for getting administration hierarchy - first try with german gemeindeschluessel, if available
 					sqlbefehl_places = "";
 					if( ! municipality_officialkeysid.equals("")) {
 
@@ -1132,21 +1142,39 @@ selectbefehl_municipalities += " AND country NOT like 'Neu-Meck-Vorp%'";
 
 						sqlbefehl_places = "SELECT osm_id AS id, name, tags->'is_in' AS is_in, tags->'place' AS place";
 						sqlbefehl_places += " FROM planet_point";
-						sqlbefehl_places += " WHERE ((tags @> '\"" + rs_municipalities.getString("point_officialkey_key") + "\"=>\""+municipality_officialkeysid+"\"') ";
-						if(rs_municipalities.getString("point_officialkey_key").equals("openGeoDB:community_identification_number")) {
-								// only in Germany: if regional number has suffix "0"s then query also short form of the number
+						sqlbefehl_places += " WHERE ((tags @> hstore(?, ?) ";
+						if(		(rs_municipalities.getString("point_officialkey_key") != null)
+							&&	! rs_municipalities.getString("point_officialkey_key").equals("")) {
+								// if regional number has suffix "0"s then query also short form of the number
 							if( ! municipality_officialkeysid.equals(local_municipality_officialkeysid_short)) {
-								sqlbefehl_places += "OR (tags @> 'openGeoDB:community_identification_number=>\""+local_municipality_officialkeysid_short+"\"') ";
+								sqlbefehl_places += "OR tags @> hstore(?, ?) ";
 							}
 						}
-						sqlbefehl_places += ") AND (tags ? 'place') and ( tags ? 'is_in') and ";
-						sqlbefehl_places += "ST_Contains(?, way) ORDER BY name;";
+						sqlbefehl_places += ") AND exist(tags, 'place') and exist(tags, 'is_in') and ";
+						sqlbefehl_places += "ST_Contains(?::geometry, way) ORDER BY name;";
 						if( ! municipality_officialkeysid.equals(local_municipality_officialkeysid_short)) {
 							log.log(Level.FINE, "Info: also searching for short form of regionalschluessel, in this case sql-string (sqlbefehl_places ==="+sqlbefehl_places+"===");
 						}
 						PreparedStatement stmt_places = con_mapnik.prepareStatement(sqlbefehl_places);
-						stmt_places.setString(1, complete_polygon);
-						log.log(Level.FINE, "sqlbefehl_places (osm nodes, regionalschluessel-search) ===" + stmt_places.toString() + "===");
+						statementIndex = 1;
+						String stmt_placesparameters = "";
+						stmt_places.setString(statementIndex++, rs_municipalities.getString("point_officialkey_key"));
+						stmt_placesparameters += "[" + (statementIndex - 1) + "] ===" + rs_municipalities.getString("point_officialkey_key") + "===";
+						stmt_places.setString(statementIndex++, municipality_officialkeysid);
+						stmt_placesparameters += "[" + (statementIndex - 1) + "] ===" + municipality_officialkeysid + "===";
+						if(rs_municipalities.getString("point_officialkey_key").equals("openGeoDB:community_identification_number")) {
+							// if regional number has suffix "0"s then query also short form of the number
+							if( ! municipality_officialkeysid.equals(local_municipality_officialkeysid_short)) {
+								stmt_places.setString(statementIndex++, rs_municipalities.getString("point_officialkey_key"));
+								stmt_placesparameters += "[" + (statementIndex - 1) + "] ===" + rs_municipalities.getString("point_officialkey_key") + "===";
+								stmt_places.setString(statementIndex++, local_municipality_officialkeysid_short);
+								stmt_placesparameters += "[" + (statementIndex - 1) + "] ===" + local_municipality_officialkeysid_short + "===";
+							}
+						}
+						stmt_places.setString(statementIndex++, complete_polygon);
+						stmt_placesparameters += "[" + (statementIndex - 1) + "] ===((complete_polygon))===";
+						log.log(Level.FINE, "Prepared Statement stmt_place Parameters ===" + stmt_placesparameters + "===");
+						log.log(Level.FINEST, "sqlbefehl_places (osm nodes, regionalschluessel-search) ===" + sqlbefehl_places + "===");
 
 						ResultSet rs_places = stmt_places.executeQuery();
 						Integer count_result_places = 0;
@@ -1229,15 +1257,21 @@ selectbefehl_municipalities += " AND country NOT like 'Neu-Meck-Vorp%'";
 				if( hierarchy_topdown.equals("")) {
 					sqlbefehl_places = "SELECT osm_id AS id, name, tags->'is_in' AS is_in, tags->'place' AS place";
 					sqlbefehl_places += " FROM planet_point";
-					sqlbefehl_places += " WHERE ST_Contains(?, way) AND name = ?";
-					sqlbefehl_places += " AND (tags ? 'place') AND (tags ? 'is_in')";
+					sqlbefehl_places += " WHERE ST_Contains(?::geometry, way) AND name = ?";
+					sqlbefehl_places += " AND exist(tags, 'place') AND exist(tags, 'is_in')";
 					sqlbefehl_places += " ORDER BY name;";
 
 					PreparedStatement stmt_places = con_mapnik.prepareStatement(sqlbefehl_places);
-					stmt_places.setString(1, complete_polygon);
-					stmt_places.setString(2, rs_municipalities.getString("name"));
-					log.log(Level.FINE, "sqlbefehl_places (osm nodes, name-search) ==="+sqlbefehl_places+"===");
-					ResultSet rs_places = stmt_places.executeQuery( sqlbefehl_places );
+					statementIndex= 1;
+					String stmt_placesparameters = "";
+					stmt_places.setString(statementIndex++, complete_polygon);
+					stmt_placesparameters += "[" + (statementIndex - 1) + "] ===((complete_polygon))===";
+					stmt_places.setString(statementIndex++, rs_municipalities.getString("name"));
+					stmt_placesparameters += "[" + (statementIndex - 1) + "] ===" + rs_municipalities.getString("name") + "===";
+
+					log.log(Level.FINE, "SQL Query sqlbefehl_places Prepared Statement Parameters ===" + stmt_placesparameters + "===");
+					log.log(Level.FINEST, "sqlbefehl_places (osm nodes, name-search) ==="+sqlbefehl_places+"===");
+					ResultSet rs_places = stmt_places.executeQuery();
 					String hierarchy_string = "";
 					Integer count_result_places = 0;
 					while( rs_places.next() ) {
@@ -1304,7 +1338,7 @@ selectbefehl_municipalities += " AND country NOT like 'Neu-Meck-Vorp%'";
 				if(rs_municipalities.getString("country").equals("Luxembourg"))
 					hierarchy_topdown = rs_municipalities.getString("country");
 
-				String updatesql_municipality = "UPDATE municipality SET polygon = ?, ";
+				String updatesql_municipality = "UPDATE municipality SET polygon = ?::geometry, ";
 				updatesql_municipality += "polygon_state = ?, ";
 				updatesql_municipality += "osm_hierarchy = ?";
 				if(hierarchy_topdown_level > 0) {
@@ -1327,22 +1361,31 @@ selectbefehl_municipalities += " AND country NOT like 'Neu-Meck-Vorp%'";
 				updatesql_municipality += " WHERE id = "+rs_municipalities.getString("id")+";";
 				PreparedStatement stmt_updatemunicipality = con_listofstreets.prepareStatement(updatesql_municipality);
 				statementIndex = 1;
+				String stmt_updatemunicipalityparameters = "";
 				stmt_updatemunicipality.setString(statementIndex++, complete_polygon);
+				stmt_updatemunicipalityparameters += "[" + (statementIndex - 1) + "] ===((complete_polygon))===";
 				stmt_updatemunicipality.setString(statementIndex++, setpolygonstate);
+				stmt_updatemunicipalityparameters += "[" + (statementIndex - 1) + "] ===" + setpolygonstate + "===";
 				stmt_updatemunicipality.setString(statementIndex++, hierarchy_topdown);
-				if(hierarchy_topdown_level > 0)
+				stmt_updatemunicipalityparameters += "[" + (statementIndex - 1) + "] ===" + hierarchy_topdown + "===";
+				if(hierarchy_topdown_level > 0) {
 					stmt_updatemunicipality.setInt(statementIndex++, hierarchy_topdown_level);
+					stmt_updatemunicipalityparameters += "[" + (statementIndex - 1) + "] ===" + hierarchy_topdown_level + "===";
+				}
 				if((rs_municipalities.getString("officialkeys_id") == null)  || ( rs_municipalities.getString("officialkeys_id").equals(""))) {
 					if( ! municipality_officialkeysid.equals("")) {
 						stmt_updatemunicipality.setString(statementIndex++, municipality_officialkeysid);
+						stmt_updatemunicipalityparameters += "[" + (statementIndex - 1) + "] ===" + municipality_officialkeysid + "===";
 					}
 				}
 				if(	( ! found_osm_relation_id.equals("")) && ( ! found_osm_relation_id.equals("indifferent"))) {
 					stmt_updatemunicipality.setString(statementIndex++, found_osm_relation_id);
+					stmt_updatemunicipalityparameters += "[" + (statementIndex - 1) + "] ===" + found_osm_relation_id + "===";
 				}
-				log.log(Level.FINEST, "Gebiet-Updatebefehl ===" + stmt_updatemunicipality.toString() + "===");
+				log.log(Level.FINE, "Update Polygon, prepared statement parameters ===" + stmt_updatemunicipalityparameters + "===");
+				log.log(Level.FINEST, "Gebiet-Updatebefehl ===" + updatesql_municipality + "===");
 				try {
-					stmt_updatemunicipality.executeUpdate( updatesql_municipality );
+					stmt_updatemunicipality.executeUpdate();
 				}
 				catch( SQLException f) {
 					log.log(Level.SEVERE, "ERROR: sql-exception occured during update sql-statement ==="+updatesql_municipality+"===  IGNORE this municipality");
@@ -1353,7 +1396,12 @@ selectbefehl_municipalities += " AND country NOT like 'Neu-Meck-Vorp%'";
 				}
 
 				Date time_municipality_endedtime = new Date();
-				log.log(Level.FINE, "ENDE Verarbeitung Municipality ==="+rs_municipalities.getString("name")+"=== Duration in sek: "+((time_municipality_endedtime.getTime()-time_municipality_startedtime.getTime())/1000));
+				log.log(Level.FINE, "\nEND Processing No. " + count_municipalities + ","
+						+ " municapility id: " + rs_municipalities.getLong("id") + ","
+						+ " official reference ===" + rs_municipalities.getString("officialkeys_id") + "===" 
+						+ " OSM Relation ID # " + rs_municipalities.getString("osm_relation_id") + ","
+						+ " Municipality ===" + rs_municipalities.getString("name") + ","
+						+ " Duration in sec: " + ((time_municipality_endedtime.getTime()-time_municipality_startedtime.getTime())/1000));
 				log.log(Level.FINE, "========================================================================================");
 			}	// end loop over all Municipality
 
@@ -1361,7 +1409,7 @@ selectbefehl_municipalities += " AND country NOT like 'Neu-Meck-Vorp%'";
 			log.log(Level.INFO, "Program: Ended Time: "+time_formatter.format(time_program_endedtime.getTime()));
 			log.log(Level.FINEST, "Program: Duration in ms: "+(time_program_endedtime.getTime()-time_program_startedtime.getTime())/1000);
 
-		}	// ende try DB-connect
+		}	// End try DB actions
 		catch( SQLException  e) {
 			e.printStackTrace();
 			return;
