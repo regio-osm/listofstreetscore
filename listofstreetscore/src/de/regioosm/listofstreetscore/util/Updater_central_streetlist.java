@@ -477,6 +477,7 @@ public class Updater_central_streetlist {
 
 			GermanyOfficialkeys germany_officialkeys_object = new GermanyOfficialkeys();
 			Streetlist_from_streetlistwiki wiki_streetlist = new Streetlist_from_streetlistwiki();
+			wiki_streetlist.setConfiguration(configuration);
 
     		int count_imported_municipalities = 0;
     		int count_notimported_municipalities_identisch = 0;

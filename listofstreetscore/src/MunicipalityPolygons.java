@@ -467,6 +467,7 @@ public class MunicipalityPolygons {
 			System.out.println("-osmrelationid 4711");
 			System.out.println("-municipalityhierarchy somestring");
 			System.out.println("-setpolygonstate somestring");
+			System.out.println("-configuration filenameorabsolutepathandfilename");
 			return;
 		}
 
@@ -477,6 +478,7 @@ public class MunicipalityPolygons {
 		String parameterCountry = "";
 		String parameterMunicipality = "";
 		String parameterOsmHierarchy = "";
+		String parameterConfiguration = "";
 		
 		if(args.length >= 1) {
 			int args_ok_count = 0;
@@ -513,6 +515,9 @@ public class MunicipalityPolygons {
 				} else if(args[argsi].equals("-setpolygonstate")) {
 					setpolygonstate = args[argsi+1];
 					args_ok_count += 2;
+				} else if(args[argsi].equals("-configuration")) {
+					parameterConfiguration = args[argsi+1];
+					args_ok_count += 2;
 				} else {
 					System.out.println("Error: unknown program parameter ===" + args[argsi] + "===");
 				}
@@ -527,6 +532,11 @@ public class MunicipalityPolygons {
 
 		Date time_program_startedtime = new Date();
 		log.log(Level.INFO, "Program: Started Time: "+time_formatter.format(time_program_startedtime));
+
+		if(!parameterConfiguration.equals("")) {
+			log.log(Level.INFO, "read excplicit given configuration file ===" + parameterConfiguration + "===");
+			configuration = new Applicationconfiguration(parameterConfiguration);
+		}
 
 		try {
 			log.log(Level.FINEST, "ok, jetzt Class.forName Aufruf ...");
@@ -611,24 +621,32 @@ selectbefehl_municipalities += " AND country NOT like 'Neu-Meck-Vorp%'";
 			PreparedStatement stmt_municipalities = con_listofstreets.prepareStatement(selectbefehl_municipalities);
 
 			Integer statementIndex = 1;
+			String parameterString = "";
 			if(!parameterOsmRelationId.equals("")) {
 				stmt_municipalities.setString(statementIndex++, parameterOsmRelationId);
+				parameterString += " [" + (statementIndex - 1) + "] ===" + parameterOsmRelationId;
 			}
 			if(!parameterOfficialkeysId.equals("")) {
 				stmt_municipalities.setString(statementIndex++, parameterOfficialkeysId);
+				parameterString += " [" + (statementIndex - 1) + "] ===" + parameterOfficialkeysId;
 			}
 			if(!parameterPolygonState.equals("")) {
 				stmt_municipalities.setString(statementIndex++, parameterPolygonState);
+				parameterString += " [" + (statementIndex - 1) + "] ===" + parameterPolygonState;
 			}
 			if(!parameterCountry.equals("")) {
 				stmt_municipalities.setString(statementIndex++, parameterCountry);
+				parameterString += " [" + (statementIndex - 1) + "] ===" + parameterCountry;
 			}
 			if(!parameterMunicipality.equals("")) {
 				stmt_municipalities.setString(statementIndex++, parameterMunicipality);
+				parameterString += " [" + (statementIndex - 1) + "] ===" + parameterMunicipality;
 			}
 			if(!parameterOsmHierarchy.equals("")) {
 				stmt_municipalities.setString(statementIndex++, parameterOsmHierarchy);
+				parameterString += " [" + (statementIndex - 1) + "] ===" + parameterOsmHierarchy;
 			}
+			log.log(Level.FINE, "parameterString ===" + parameterString + "===");
 
 			ResultSet rs_municipalities = stmt_municipalities.executeQuery();
 			Integer count_municipalities = 0;
@@ -740,6 +758,8 @@ selectbefehl_municipalities += " AND country NOT like 'Neu-Meck-Vorp%'";
 				while( rs_relation.next() ) {
 					count_relations++;
 					log.log(Level.FINE, "Relation #"+count_relations+":  id==="+rs_relation.getString("id")+"===  name ==="+rs_relation.getString("name")+"===   gemeindeschluessel ==="+rs_relation.getString("gemeindeschluessel")+"===  boundary ==="+rs_relation.getString("boundary")+"===");
+
+						// if relation doesn't have boundary=administrative key-value, skip
 					if((rs_relation.getString("boundary") == null) || ( ! rs_relation.getString("boundary").equals("administrative"))) {
 						log.log(Level.WARNING, "Warning: Relation-ID is invalid. It's not boundary=administrative, but ");
 						if(rs_relation.getString("boundary") == null) {
