@@ -6,6 +6,7 @@
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 
+import de.regioosm.listofstreetscore.util.Applicationconfiguration;
 import de.regioosm.listofstreetscore.util.Streetlist_from_streetlistwiki;
 
 
@@ -16,6 +17,9 @@ public class StreetlistWikiReader {
 		String				args_name = "";
 		String				args_mode = "complete";
 		String				args_country = "";
+		String parameterConfiguration = "";
+		Applicationconfiguration configuration = null;
+		
 
 		for(int lfdnr=0;lfdnr<args.length;lfdnr++) {
 			System.out.println("args["+lfdnr+"] ==="+args[lfdnr]+"===");
@@ -24,6 +28,7 @@ public class StreetlistWikiReader {
 			System.out.println("-mode complete|recentchanges");
 			System.out.println("-name municipalityname");
 			System.out.println("-country country");
+			System.out.println("-configuration filenameorabsolutepathandfilename");
 			return;
 		}
 
@@ -52,6 +57,9 @@ public class StreetlistWikiReader {
 							System.out.println("ERROR: invalide value for application parameter -mode, was ==="+args_mode+"===");
 							return;
 						}
+					} else if(args[argsi].equals("-configuration")) {
+						parameterConfiguration = args[argsi+1];
+						args_ok_count += 2;
 					} else {
 						System.out.println("ERROR: unexpected commandline option ==="+args[argsi]+"=== STOP");
 						return;
@@ -67,7 +75,14 @@ public class StreetlistWikiReader {
 			return;
 		}
 
+			// read main or explicit given configuration
+		if(parameterConfiguration.equals(""))
+			configuration = new Applicationconfiguration();
+		else
+			configuration = new Applicationconfiguration(parameterConfiguration);
+
 		Streetlist_from_streetlistwiki wiki_streetlist_object = new Streetlist_from_streetlistwiki();
+		wiki_streetlist_object.setConfiguration(configuration);
 		try {
 			String pagecontent = wiki_streetlist_object.read(args_mode, args_name, args_country, args_output);
 		}

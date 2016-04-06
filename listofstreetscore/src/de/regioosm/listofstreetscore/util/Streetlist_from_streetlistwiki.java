@@ -100,6 +100,7 @@ public class Streetlist_from_streetlistwiki {
 		wiki_namespaces.put("Ísland", "IS");
 		wiki_namespaces.put("Österreich", "AT");
 		wiki_namespaces.put("România", "RO");
+		wiki_namespaces.put("Russia", "RU");
 	}
 	
 	public static void waiting (int n) {
@@ -111,6 +112,10 @@ public class Streetlist_from_streetlistwiki {
 		}
 		while ((t1 - t0) < (n * 1000));
 		System.out.println("waiting ended");
+	}
+
+	public void setConfiguration(Applicationconfiguration configuration) {
+		Streetlist_from_streetlistwiki.configuration = configuration;
 	}
 
 	static String replace(String sourcestring, String searchstring, String replacestring)
@@ -403,6 +408,7 @@ public class Streetlist_from_streetlistwiki {
 			Pattern wildcard_pattern = Pattern.compile("\\s");
 
 			Municipality municipality_import = new Municipality();
+			municipality_import.setConfiguration(configuration);
 			municipality_import.hallo();
 
 			for(Integer titelindex=0;titelindex<liste_anzahl;titelindex++) {

@@ -55,6 +55,11 @@ public class Municipality {
 		}
 	}
 
+	public void setConfiguration(Applicationconfiguration configuration) {
+		Municipality.configuration = configuration;
+	}
+
+
 	public void hallo(){
 		try {
 			System.out.println("hier die getClientInfo innerhalb hallo ==="+global_con_listofstreets.getClientInfo().toString()+"===");

@@ -57,6 +57,7 @@ public class Mediawiki_API {
 		wiki_namespaces.put("Ísland", "IS");
 		wiki_namespaces.put("Österreich", "AT");
 		wiki_namespaces.put("România", "RO");
+		wiki_namespaces.put("Russia", "RU");
 	}
 	public boolean login(String wiki_url, String wiki_username, String wiki_password) {
 		String upload_string = "";
